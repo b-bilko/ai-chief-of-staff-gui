@@ -3,6 +3,15 @@ type: note
 tags: ["#meta"]
 ---
 
+<!--
+Claude: read items out of the thread sections below and nowhere else. Everything
+above the Sections heading is documentation about the format, including one
+example line that has the shape of an unchecked item and is not one. Do not
+pattern match the whole file for `- [ ]`, because that line matches and a fresh
+tracker would report a to-do called {item text}. A tracker with no thread
+sections yet holds no items at all, which is the correct thing to say about it.
+-->
+
 # Tracker
 
 The one to-do list. Everything actionable lands here, whether you typed it
@@ -13,6 +22,10 @@ that never stops being current, so a single date on it would be wrong the day
 after setup.
 
 ## Item syntax
+
+One line per item: an unchecked box, the text, an optional priority flag, an
+optional due date, and the date it was captured in a trailing comment. The line
+below is the reference shape, not an item on your list.
 
 ```
 - [ ] {item text} !{priority} due:{YYYY-MM-DD} <!-- captured: YYYY-MM-DD -->

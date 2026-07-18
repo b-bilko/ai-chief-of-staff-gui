@@ -23,16 +23,48 @@ boundaries and the run weekday through Bash, with the timezone from
 `config/profile.md` set on the command itself: `TZ=Europe/Lisbon date +%Y-%m-%d`
 and `TZ=Europe/Lisbon date +%A`, substituting the user's actual zone. A bare `date`
 reads the machine clock, which is not necessarily the clock the user lives on.
-Never read a weekday off an ISO string. Title the review by quarter and year, for
-example "Q3 2027".
+Never read a weekday off an ISO string.
+
+Backing up from today is not portable between systems, so use the form that
+matches the machine: `TZ=Europe/Lisbon date -v-3m +%Y-%m` on macOS,
+`TZ=Europe/Lisbon date -d '3 months ago' +%Y-%m` on GNU. Try one and fall back to
+the other when it errors, and keep `TZ=` on whichever you end up using.
+
+If `config/profile.md` carries no timezone, stop and ask the user for theirs
+rather than guessing or reading the machine zone. Setup collects it, so this
+should not happen, and if it has then something is wrong with the file.
+
+Title the review by quarter and year, for example "Q3 2027".
 
 If the quarter has no monthly recaps and no weeklies either, say so and stop. A
 quarterly built on nothing is fiction.
 
 If `reviews/YYYY-QN-quarterly.md` already exists for the quarter you are about to
 write, stop and ask before replacing it. Say when it was written and what it was
-built from. A quarterly assembled from three monthlies should not be silently
-overwritten by a run working from two weeks of weeklies.
+built from, which monthlies or weeklies backed it, how many of those carried
+`coverage: thin`, and whether it is marked thin itself. Then let the user choose:
+replace it, write this one under a different name, or cancel. A quarterly
+assembled from three full monthlies should not be silently overwritten by a run
+working from two weeks of weeklies.
+
+### Sources marked thin
+
+A weekly carries `coverage: thin` when it was built from fewer than three daily
+notes, and a monthly carries it when half its weeks or more came in thin. Check
+that field on every recap you read, before you count anything.
+
+Weight a thin source as partial. It does not carry a trend on its own, and it is
+never the sole support for a win, a gap, a decision, or a movement read across
+ninety days. Where a thin month is all you have for a stretch, say what the
+stretch rests on rather than writing around it.
+
+Thin months also change what the quarter can claim. Three months where two are
+thin is not ninety days of evidence, so say that near the top of the review and
+keep The Quarter in the Rearview and How the Quarter Moved proportionate to it.
+Carry `coverage: thin` into this review's own frontmatter when half the quarter
+or more came from thin sources, so the annual sees it. It also weakens the case
+for a Season Rewrite, so hold that section to what the sources actually support
+and say plainly when the evidence is too thin to propose one.
 
 ## Sources (read in this order)
 
@@ -84,6 +116,30 @@ Ninety days is long enough that the season may have shifted underneath the file.
 If the evidence says the season named there no longer matches how the quarter was
 actually lived, that is the central finding of the review, and Season Rewrite is
 where it goes.
+
+### When the config is not fully filled
+
+Judge the answer slots, not the file text. Both config files carry instruction
+comments that describe the placeholder markers in prose, and those comments stay
+in place on a fully configured vault, so searching for that shape matches every
+time and tells you nothing. Look at what sits under each numbered heading.
+
+A slot counts as filled when it holds anything the user put there, and
+`(skipped)` is something the user put there. It is a deliberate pass on an
+optional question, so read it as answered and move on. A skipped season question
+never blocks this review.
+
+Then degrade rather than stop:
+
+- Every slot still unfilled, nothing written anywhere: the user has not been set
+  up. Say so in one line, offer the setup interview in CLAUDE.md, and stop.
+- Some filled, some not: run the review on what is there. No season means no
+  season lens, so drop Season Lens, report The Honest Score against the profile's
+  life threads instead, and say nothing about the missing file. Season Rewrite
+  becomes an offer to write a season for the first time rather than a proposed
+  replacement, and it still needs an explicit yes before anything is written.
+
+A partly filled config is a normal state, not an error.
 
 ## What to include
 
@@ -290,12 +346,13 @@ tags: ["#meta"]
 ```
 
 Add the user's own tags from `config/profile.md` alongside `#meta` where they fit
-the quarter.
+the quarter. Add `coverage: thin` when half the quarter or more came from thin
+sources, using that exact lowercase value, since the annual looks for that string.
 
 2. Title the body `# Quarterly Recap: <Quarter> <Year>`.
 3. End with a sources footer, in the same shape the weekly and monthly use,
    wikilinking the monthly recaps you read plus the substitute weeklies for any
-   month that had no monthly:
+   month that had no monthly, and marking any of them that came in thin:
 
 ```markdown
 ---

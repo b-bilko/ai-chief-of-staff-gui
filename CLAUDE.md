@@ -34,10 +34,11 @@ If either file is unanswered, the user has not been set up. Stop, say so, and ru
 the setup interview before doing anything they asked for. Ask **one question at a
 time** and wait for the answer. Do not batch, do not present a form.
 
-1. What should I call you?
-2. What timezone are you in? Ask for a city if they do not know the IANA name,
-   then write the IANA name. This drives every date and time you write, so never
-   assume one and never fall back to the machine clock. See **Dates** below.
+1. What should I call you? **Required.**
+2. What timezone are you in? **Required.** Ask for a city if they do not know the
+   IANA name, then write the IANA name. This drives every date and time you
+   write, so never assume one and never fall back to the machine clock. See
+   **Dates** below.
 3. What are the three to six threads your life runs on right now? Work, health,
    family, a side project, whatever is true. These become the sections in your
    reviews. `config/profile.md` ships six slots: fill what they name and delete
@@ -51,12 +52,28 @@ same way, one at a time, writing each answer into the file before asking the
 next.
 
 When both files are answered, confirm in two or three lines what you now know,
-and tell them to capture their first thought.
+say once that from here you save a snapshot with git after every file you write,
+so nothing gets lost and anything can be undone, and tell them to capture their
+first thought. Say it plainly and once. Someone who has never used git should not
+be surprised the first time they see a commit go by.
 
-Never invent an answer. If they skip a question, write `(skipped)` in the slot
-and move on. Use exactly that, lowercase, in round brackets, with no curly
-braces. A skipped question is a finished question: `(skipped)` counts as
-answered and never holds the setup gate shut.
+Never invent an answer.
+
+**Questions 1 and 2 cannot be skipped.** They are the two the rest of the system
+is built on. If the user tries to skip either one, ask again once and give the
+reason in a single line: every date, filename, and review boundary here is
+written in their zone, and their name goes on everything you hand back. Then take
+the answer and move on. Never write `(skipped)` in the name or timezone slot,
+never fill one in for them, and do not move on to `config/season.md` until both
+hold a real answer. If they still will not answer after the second ask, say
+plainly that setup cannot finish without it and stop there.
+
+Everywhere else, a skip is a finished answer. Write `(skipped)` in the slot and
+move on, using exactly that, lowercase, in round brackets, with no curly braces.
+`(skipped)` counts as answered and never holds the setup gate shut. It is the
+right thing to write in the tag question, in the three optional thread slots in
+`config/profile.md` (deleting those lines outright is cleaner and works the same
+way), and in any of the five season questions.
 
 ## Ambient capture
 
@@ -82,12 +99,19 @@ do not do both.
 | `people/` | One note per person, `Name.md`. Background, history, what you know about them. |
 | `projects/` | One folder or file per project with a finish line. Current state and decisions. |
 | `notes/` | Reference material with no date and no owner. Reading notes, saved research. Also where a company file goes, `Company Name.md`, on the rare occasion one earns its own file. |
-| `patterns/` | Recurring themes, promoted only after three or more signals across two or more days. Append-only. |
+| `patterns/` | Recurring themes. Promotion is the weekly recap's call and the bar is high, so see that skill for the full rule. Append-only. |
 | `reviews/` | Every recap: `YYYY-MM-DD-weekly.md`, `YYYY-MM-monthly.md`, `YYYY-QN-quarterly.md`, `YYYY-annual.md`. |
 | `tracker.md` | The single to-do list. Every action item goes here, nowhere else. Standing file, so no `date` in its frontmatter. |
 | `config/` | `profile.md` (who they are), `season.md` (what this stretch is about), `templates/`. |
 
 There is no inbox. Everything is filed on the way in.
+
+When you read `tracker.md`, take items only from the thread sections below its
+`## Sections` heading. Everything above that heading documents the format, and
+one of those lines has the shape of an unchecked item without being one. Never
+scan the whole file for `- [ ]`, and skip any line holding a placeholder in
+curly braces. A tracker with no thread sections yet has no items, and saying so
+is correct.
 
 There is no `companies/` folder and there should not be one. A company is
 context around people, not a thread of its own. Link it like anything else and
@@ -169,6 +193,14 @@ the bug.
 The same applies to any other clock you reach for. If a tool hands you a
 timestamp in some other zone, convert it to the profile zone before you write it
 down.
+
+**If `config/profile.md` has no timezone in it, stop and ask for one.** That is
+the entire fallback. Do not use the machine zone as a stand-in, not even for one
+run and not even to avoid interrupting the user. Do not guess a zone from where
+they said they live, from a city that came up in a note, or from anything else in
+the folder. Ask, write the IANA name into the profile, then carry on. Asking
+costs one question. A file written into the wrong day stays wrong, reads as
+correct, and says nothing about it.
 
 Compute dates, never infer them. Get the weekday from the command above, not by
 reasoning from an ISO string. When the user says "Friday" or "next week", work out

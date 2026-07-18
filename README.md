@@ -30,7 +30,8 @@ keeps each pass cheap, and it means a bad week cannot quietly rewrite your year.
  quarterly-recap      reads the three monthlies
                         │                   ──►  reviews/YYYY-QN-quarterly.md
                         ▼
-   annual-review      reads the four quarterlies
+   annual-review      reads the four quarterlies, dropping to the monthlies
+                      and then the weeklies for any stretch they do not cover
                                             ──►  reviews/YYYY-annual.md
 ```
 
@@ -57,6 +58,16 @@ better filter than memory.
    ```
    Add your own private remote later with `git remote add origin <your-repo>`, or
    add none at all and keep everything on this machine.
+
+   **Never used git?** Git keeps a dated history of every change to these files,
+   so nothing you write is ever really lost and any edit can be undone. You do
+   not have to learn it. Claude runs it for you and saves a snapshot each time it
+   writes something. The few commands in this README are the only ones you type
+   by hand, and the ones in this step are worth getting right, because they are
+   what keeps your notes pointed at your own copy instead of somebody else's. If
+   you want a proper introduction, GitHub's
+   [Hello World guide](https://docs.github.com/en/get-started/start-your-journey/hello-world)
+   is the friendliest one and takes about ten minutes.
 3. Open the folder in Claude Code:
    ```
    cd ai-chief-of-staff
@@ -64,8 +75,10 @@ better filter than memory.
    ```
 4. Say **"set me up"**. Claude runs a short interview, one question at a time:
    your name, your timezone, the three to six threads your life actually runs on,
-   and your tags. Then it walks you through `config/season.md`, which is the lens
-   every other skill reads. Ten minutes, once.
+   and your tags. The first two are the only ones you cannot skip, because every
+   date, filename, and week boundary in this folder gets written in your zone.
+   Then it walks you through `config/season.md`, which is the lens every other
+   skill reads. Ten minutes, once.
 5. Capture something. Just type it:
    ```
    Talked to Priya about moving the Saturday hours. She wants a decision by Friday.
@@ -82,10 +95,10 @@ better filter than memory.
 | `/capture` | Routes a thought, note, meeting, or to-do to the right file. Runs on its own when you type something that reads like a note instead of a question. |
 | `/daily-briefing` | A two to three minute read on your morning: what is slipping, today's three priorities, open loops, who is waiting on you. |
 | `/daily-wrap` | Nine questions at the end of the day, including what you decided. Your answers go in verbatim, and the tracker gets a check-in. |
-| `/weekly-recap` | Reads the week's daily notes. Wins, decisions made, gaps, a four-bucket pass over the tracker, and any pattern that has earned promotion. |
+| `/weekly-recap` | Reads the week's daily notes. Wins, decisions made, gaps, a four-bucket pass over the tracker, and any pattern that has earned promotion. The default window is a rolling seven days ending today, so a Wednesday run covers Thursday to Wednesday rather than a calendar week. Name the week you want and it uses that instead. |
 | `/monthly-recap` | Reads the month's weeklies. How each thread moved, decisions that held or got walked back, trend lines, and a check on whether your season is still true. |
 | `/quarterly-recap` | Reads the three monthlies. The long arc, plus a proposed rewrite of `config/season.md` you accept, edit, or reject. |
-| `/annual-review` | Reads the four quarterlies. The year's arc, decisions of the year, what the patterns now say, and next year's opening season. Falls back to a guided interview if the quarterlies are not there. |
+| `/annual-review` | Reads the four quarterlies. The year's arc, decisions of the year, what the patterns now say, and next year's opening season. For any stretch a quarterly does not cover it drops to that period's monthlies, and then to the weeklies, naming each substitution in the review. A guided interview runs only when the year has no quarterly, no monthly, and no weekly at all. |
 
 Every skill writes plain markdown you can read without Claude, edit by hand, and
 search with anything.
@@ -101,8 +114,9 @@ Most journaling tools flatter you. This one is built not to.
 - Patterns have to earn it, and the bar is deliberately high. A theme reaches
   `patterns/` only when three things hold at once: three or more signals across
   three or more days, coming from at least two distinct subjects, with thirty days
-  of notes behind them. One worry raised on three consecutive days is a single
-  signal recorded three times, not a theme. Everything under the bar sits in a
+  of notes behind them and the signals spread across two weeks or more. One worry
+  raised on three consecutive days is a single signal recorded three times, not a
+  theme. Everything under the bar sits in a
   Watching list you can ignore. Expect almost nothing to qualify in your first
   month, which is the design working rather than failing.
 - Scores are real. Every recap ends with an honest score, and a 4 stays a 4. If
@@ -151,13 +165,21 @@ your calendar. If you want something sent, you write it and send it yourself.
 
 ### Meeting note-takers
 
-The pattern is the same for all of them: get the notes out of the tool, drop the
-file into `meetings/`, and let capture route it. Name the file
-`YYYY-MM-DD - Descriptive name.md`: sentence case, real spaces, no punctuation
-beyond the separator, for example
-`meetings/2026-03-14 - Saturday hours with Priya.md`. Then tell Claude "process
-the meeting note I just dropped in" and it files the attendees, the decisions,
-and the action items where they belong.
+The pattern is the same for all of them, and for any tool not listed here: get
+the notes out of the tool, drop the file into `meetings/`, and let capture route
+it. Name the file `YYYY-MM-DD - Descriptive name.md`, sentence case, with real
+spaces rather than dashes or underscores:
+
+```
+meetings/2026-03-14 - Saturday hours with Priya.md
+meetings/2026-03-16 - Dad's power of attorney.md
+```
+
+Ordinary punctuation is fine, apostrophes and commas and question marks
+included. Leave out the handful of characters that break filesystems or sync
+tools: slashes, colons, asterisks, pipes, angle brackets, and quotation marks.
+Then tell Claude "process the meeting note I just dropped in" and it files the
+attendees, the decisions, and the action items where they belong.
 
 **Granola.** Notes and transcripts live in the Granola app, one card per meeting.
 The worked example is the
@@ -166,17 +188,33 @@ which pulls the summary and the full transcript straight into your editor and ca
 write the file for you. Otherwise, open the meeting, copy the notes panel, and
 paste it into a new file in `meetings/`.
 
-**Gong.** Open the call in Gong and use the call brief, which carries the summary,
-the topics, and the action items. Copy it out of the call page, or pull it with the
-Gong API (`/v2/calls/transcript` for the transcript, `/v2/calls/extensive` for the
-brief) if you have API access on your workspace. Paste into `meetings/` with the
-same filename shape.
+**Microsoft Teams.** Everything is on the meeting itself. Open it from your Teams
+calendar or from the meeting chat and go to the Recap tab, which holds the
+recording, the transcript, and, if your workplace has Copilot, the AI notes and
+follow-up tasks. Download the transcript from there as `.docx` or `.vtt`, or
+select the notes and copy them into a new file in `meetings/`. Recording and
+transcription are switched on by whoever administers Teams where you work, so an
+empty Recap tab usually means it was never turned on rather than that something
+failed.
+
+**Google Meet.** Transcripts and Gemini notes land in the meeting organizer's
+Google Drive, in a Meet Recordings folder, and a link is emailed to the organizer
+once the call ends. The transcript arrives as a Google Doc. Open it, then File,
+then Download, and pick plain text or Markdown, or just select the text and paste
+it into `meetings/` yourself. These need a Google Workspace plan that includes
+them, so a personal Gmail account will not produce a transcript.
 
 **Zoom.** If AI Companion is on, the meeting summary shows up in the Zoom web
 portal under Meetings, then Meeting Summary, and it is usually also emailed to the
 host. Open the summary and copy it, or download the `.vtt` transcript from the
 cloud recording and save that instead. Transcripts are long and raw, so the summary
 is the better input unless you need exact quotes.
+
+**Gong.** Sales calls, if your team runs it. Open the call in Gong and use the
+call brief, which carries the summary, the topics, and the action items. Copy it
+out of the call page, or pull it with the Gong API (`/v2/calls/transcript` for the
+transcript, `/v2/calls/extensive` for the brief) if you have API access on your
+workspace. Paste into `meetings/` with the same filename shape.
 
 ## More
 

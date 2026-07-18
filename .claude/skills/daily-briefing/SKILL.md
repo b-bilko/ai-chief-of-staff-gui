@@ -49,17 +49,29 @@ With `Europe/Lisbon` in the profile:
 - `TZ=Europe/Lisbon date +%A` for the weekday
 
 Never read a weekday off an ISO string. For past days, compute them the same way
-with the zone still attached (`TZ=Europe/Lisbon date -v-1d +%A` on macOS,
-`TZ=Europe/Lisbon date -d yesterday +%A` on GNU), or copy the weekday out of the
-daily note's own heading.
+with the zone still attached. Past date arithmetic is not portable: macOS has BSD
+`date` and takes `TZ=Europe/Lisbon date -v-1d +%A`, Linux has GNU `date` and
+takes `TZ=Europe/Lisbon date -d yesterday +%A`. Run one, and if the shell rejects
+the flag, run the other. You can also copy the weekday out of the daily note's
+own heading.
 
-If the profile has no timezone yet, use the machine zone, say once that you are
-guessing at it, and keep going. Do not stop the brief over it.
+If the profile has no timezone in it, stop and ask for one. Do not guess a zone,
+do not use the machine zone, and do not brief around the gap. Every date in the
+brief depends on it, and a brief built on the wrong day is worse than a brief
+that waited thirty seconds for an answer. Setup asks for the timezone and does
+not let it be skipped, so this should never come up.
 
 Use that same zone for every time you state. If a day you want to reference
 cannot be pinned down, say "a few days ago" rather than guessing a weekday.
 
 ## Reading the tracker
+
+Read items only from the thread sections below the `## Sections` heading.
+Everything above it documents the format, and one line there has the shape of an
+unchecked item without being one. Never scan the whole file for `- [ ]`, and skip
+any line holding a placeholder in curly braces. On a fresh tracker that rule is
+the difference between an empty list, which is the truth, and a phantom task
+called `{item text}`.
 
 Parse every item for three markers:
 
@@ -99,7 +111,9 @@ mentioned them.
 Check the answer slots, not the file text. Both config files carry instruction
 comments that name the placeholder markers in prose, and those comments stay
 there forever, so a plain search for that string matches on a fully configured
-vault every time. Look at what sits under each heading instead.
+vault every time. Look at what sits under each heading instead. Nothing in
+`config/templates/` is config: those slots are filled by skills on every run, so
+never read them as setup answers.
 
 A slot counts as filled when it holds anything the user put there, and
 `(skipped)` is something the user put there. Treat it as a filled answer, a
@@ -109,9 +123,12 @@ Then degrade rather than stop:
 
 - Every slot still unfilled, nothing written at all: the user has not been set
   up. Say so in one line, offer the setup interview in CLAUDE.md, and stop.
-- Some filled, some not: brief on what is there. No timezone means you say so
-  once and use the machine zone. No season means no season lens, so the brief
-  runs without one and says nothing about it.
+- Some filled, some not: brief on what is there. No season means no season lens,
+  so the brief runs without one and says nothing about it. No life threads means
+  the tracker reads as one flat list.
+
+The one gap you cannot work around is the timezone, so ask for it and wait, as
+the Dates section says.
 
 A partly filled profile is a normal state, not an error.
 

@@ -19,17 +19,48 @@ day, the last day, and the run weekday through Bash, with the timezone from
 `config/profile.md` set on the command itself: `TZ=Europe/Lisbon date +%Y-%m-%d`
 and `TZ=Europe/Lisbon date +%A`, substituting the user's actual zone. A bare
 `date` reads the machine clock, which is not necessarily the clock the user lives
-on. Never infer a weekday from an ISO string. Title the review by month name and
-year, for example "April 2027".
+on. Never infer a weekday from an ISO string.
+
+Backing up from today is not portable between systems, so use the form that
+matches the machine: `TZ=Europe/Lisbon date -v-1m +%Y-%m` on macOS,
+`TZ=Europe/Lisbon date -d '1 month ago' +%Y-%m` on GNU. Try one and fall back to
+the other when it errors. Keep `TZ=` on whichever you end up using.
+
+If `config/profile.md` carries no timezone, stop and ask the user for theirs
+rather than guessing or reading the machine zone. Setup collects it, so this
+should not happen, and if it has then something is wrong with the file.
+
+Title the review by month name and year, for example "April 2027".
 
 If the month has fewer than two weekly recaps in `reviews/`, say so and ask
 whether to continue anyway. One weekly is not a month, and a review built on it
 will read like a padded week.
 
+### Weeklies marked thin
+
+A weekly carries `coverage: thin` in its frontmatter when it was built from fewer
+than three daily notes. Check that field on every weekly you read, before you
+count anything.
+
+A thin weekly is real but partial, so weight it as partial. Do not treat it as a
+week of evidence, do not let a single observation inside one carry a trend, and
+never let one supply the only support for a win, a gap, a decision, or a
+movement read. Where a thin weekly is the only source for something worth saying,
+say it and say what it rests on.
+
+Count thin weeklies separately when you apply the two-weekly floor above. Four
+weeklies where three are thin is closer to one week of coverage than four, so
+say so and ask whether to continue, the same as you would with one weekly. If
+half the month or more came from thin weeklies, name it in one line near the top
+of the review, next to the straddle line, and carry `coverage: thin` into this
+review's own frontmatter so the quarterly sees it too.
+
 If `reviews/YYYY-MM-monthly.md` already exists for the month you are about to
 write, stop and ask before replacing it. Say when it was written and what it was
-built from. A review assembled from four weeklies should not be silently
-overwritten by a thinner run.
+built from, which weeklies backed it, how many of those were thin, and whether it
+carries `coverage: thin` itself. Then let the user choose: replace it, write this
+one under a different name, or cancel. A review assembled from four full weeklies
+should not be silently overwritten by a thinner run.
 
 ## Sources (read in this order)
 
@@ -96,6 +127,29 @@ meaningful this month.
 The life threads come from `config/profile.md`. Use the threads the user actually
 named there, in the order they named them. Never assume a thread they did not
 write down, and never carry a thread over from another user's setup.
+
+### When the config is not fully filled
+
+Judge the answer slots, not the file text. Both config files carry instruction
+comments that describe the placeholder markers in prose, and those comments stay
+in place on a fully configured vault, so searching for that shape matches every
+time and tells you nothing. Look at what sits under each numbered heading.
+
+A slot counts as filled when it holds anything the user put there, and
+`(skipped)` is something the user put there. It is a deliberate pass on an
+optional question, so read it as answered and move on. A skipped season question
+never blocks this review.
+
+Then degrade rather than stop:
+
+- Every slot still unfilled, nothing written anywhere: the user has not been set
+  up. Say so in one line, offer the setup interview in CLAUDE.md, and stop.
+- Some filled, some not: run the review on what is there. No season means no
+  season lens, so drop the Season Lens and Season Check sections, report The
+  Honest Score against the profile's life threads instead, and say nothing about
+  the missing file.
+
+A partly filled config is a normal state, not an error.
 
 ## What to include
 
@@ -270,12 +324,15 @@ tags: ["#meta"]
 ```
 
 Add the user's own tags from `config/profile.md` alongside `#meta` where they fit
-the month.
+the month. Add `coverage: thin` when half the month or more came from thin
+weeklies, using that exact lowercase value, since the quarterly looks for that
+string.
 
 2. Title the body `# Monthly Recap: <Month> <Year>`.
 3. End with a sources footer, in the same shape the weekly uses, wikilinking the
-   weekly recaps you read, naming any week you had to fill from daily notes, and
-   naming the straddling week at either end and which month it counted in:
+   weekly recaps you read, marking any of them that came in thin, naming any week
+   you had to fill from daily notes, and naming the straddling week at either end
+   and which month it counted in:
 
 ```markdown
 ---

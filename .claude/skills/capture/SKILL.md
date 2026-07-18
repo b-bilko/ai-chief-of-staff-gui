@@ -49,7 +49,43 @@ TZ=Europe/Lisbon date +%A
 ```
 
 Substitute whatever zone the profile names. Bare `date +%A` is wrong. Never read
-a weekday off an ISO string.
+a weekday off an ISO string. If the profile has no timezone in it, stop and ask
+for one, then carry on once they answer. Never guess a zone and never fall back
+to the machine clock, because a capture filed to the wrong day looks correct and
+stays wrong.
+
+Date arithmetic is not portable, so any day other than today needs care. On macOS
+the shell has BSD `date` and takes `TZ=Europe/Lisbon date -v-1d +%Y-%m-%d`. On
+Linux it has GNU `date` and takes `TZ=Europe/Lisbon date -d yesterday +%Y-%m-%d`.
+Run one, and if the shell rejects the flag, run the other. Do not do the
+arithmetic in your head instead.
+
+### When the config is not fully filled
+
+Check the answer slots, not the file text. Both config files carry instruction
+comments that describe the placeholder markers in prose, and those comments stay
+there forever, so a plain search for that shape matches on a fully configured
+vault every time. Look at what sits under each heading instead. Nothing in
+`config/templates/` is config: those slots are filled by skills on every run, so
+never read them as setup answers.
+
+A slot counts as filled when it holds anything the user put there, and
+`(skipped)` is something the user put there. Treat it as a filled answer, a
+deliberate pass on an optional question, never as a blocker.
+
+Then degrade rather than stop:
+
+- Every slot still unfilled, nothing written at all: the user has not been set
+  up. Say so in one line, offer the setup interview in CLAUDE.md, and stop.
+- Some filled, some not: capture with what is there. No tag set means you write
+  the note without tags and propose one in your confirmation. No life threads
+  means a tracker item goes in without a thread section. No season means you file
+  it without the season lens and say nothing about it.
+
+The one gap you cannot work around is the timezone, because every path in this
+skill writes a date. Ask for it, wait, and do not guess.
+
+A partly filled profile is a normal state, not an error.
 
 ## Backdating
 
@@ -57,8 +93,8 @@ Most captures are about today. When the input says otherwise ("yesterday",
 "Monday night", "this happened on the 3rd"), write it to that day's note instead
 of today's.
 
-- Resolve the phrase with the same timezone aware `date` call, never by counting
-  in your head.
+- Resolve the phrase with the same timezone aware `date` call, in the portable
+  form above, never by counting in your head.
 - For "yesterday" or an outright date, just write it. For anything loose ("last
   week", "a few days ago"), say the resolved date back in one line first and wait.
 - If `daily/YYYY-MM-DD.md` for that day does not exist, create it from the
@@ -101,15 +137,23 @@ filling `{{date}}` and `{{weekday}}`. Append the content verbatim under
 
 If the entry records something the user decided, put it under `## Decisions Made`
 instead. That heading is a top level section of the daily note and it sits
-directly after the `## End of Day Reflection` section, before `## Non-negotiables`
-if that one exists. Create it there if it is not there yet, and append to it if it
-is. Never open a second one. The weekly recap harvests decisions by that exact
-heading name, so both the wording and the position matter.
+directly before the `## End of Day Reflection` section. Create it there if it is
+not there yet, and append to it if it is. Never open a second one. Keeping it
+above the reflection means a note captured at two in the afternoon reads top to
+bottom, with the one empty heading the wrap has not reached yet sitting last
+where it belongs. The weekly recap harvests decisions by that exact heading name,
+so the wording matters most of all.
 
 Wikilink every person, project, and company: `[[Nadia Okonkwo]]`, `[[kitchen
 remodel]]`. If the linked file does not exist, still write the link, and mention
 in your confirmation that the note is missing. Do not wikilink the user
 themselves.
+
+Link names, not roles. "The deputy principal", "my landlord", "the new starter"
+are descriptions of a person, not a person's name, and `[[deputy principal]]`
+points at a file nobody will ever open. Leave a role reference as plain text. If
+the same role shows up a second time, offer once to attach a name to it so future
+mentions can link, and if they pass, drop it and do not ask again.
 
 Add tags to the note's frontmatter from the user's tag set in
 `config/profile.md`. Do not invent a tag. If nothing fits, propose one in your
@@ -119,8 +163,11 @@ confirmation and wait.
 
 Create `meetings/YYYY-MM-DD - Descriptive name.md`. Sentence case, meaning you
 capitalize the first word and any proper nouns and nothing else. Spaces, no
-slugs: `meetings/2026-03-14 - Roof estimate with Dana Whitfield.md`. If a file
-for that conversation already exists, append rather than making a second one.
+slugs: `meetings/2026-03-14 - Roof estimate with Dana Whitfield.md`. Ordinary
+punctuation is fine, so `meetings/2026-04-02 - Dad's power of attorney.md` is a
+good filename. Leave out the characters that break filesystems: slashes, colons,
+asterisks, pipes, angle brackets, and quotation marks. If a file for that
+conversation already exists, append rather than making a second one.
 
 ```yaml
 ---
@@ -259,6 +306,8 @@ phrase from the item text so the line reads cleanly.
 - "by Friday" and other weekdays: the next occurrence of that weekday. Confirm it
   with the timezone aware `date` call above, never by counting in your head.
 - "this week" and "by EOW": the coming Friday. "next week": Friday of next week.
+  That is an assumption about where their week ends, not a fact, so say it once
+  when you use it and take whatever they tell you instead.
 - "end of month": the last day of the current month.
 - "in N days" or "in N weeks": today plus N days, or N times seven.
 - `MM/DD`: this year if it has not passed, otherwise next year.
@@ -270,16 +319,33 @@ carries wikilinks and metadata the user never typed. Normalize both sides first:
 1. Strip `[[` and `]]`, so `[[Dana Whitfield]]` becomes `Dana Whitfield`.
 2. Strip the metadata, meaning `!high`, `!med`, `!low`, `due:...`, the checkbox,
    and the `<!-- captured: ... -->` comment.
-3. Lowercase, drop punctuation, and drop filler words (a, an, the, to, for, my,
-   about, on).
+3. Lowercase and drop punctuation.
+4. Drop filler words: a, an, and, the, to, for, from, my, our, their, this, that,
+   these, those, with, about, on, in, at, of, some, any, re, please, need, needs,
+   want, get, got.
+5. Drop the first remaining word on both sides. Action items open with a verb,
+   and the verb is the part users swap without meaning anything by it, so
+   "email Rangi about the trip forms" and "send Rangi the trip form email" should
+   land on the same remainder rather than reading as two jobs. Only the first
+   word goes.
+6. Treat singular and plural as one word. Trim a trailing "s" or "es" off every
+   word that survives, so "form" and "forms" compare equal. It is crude and it
+   will occasionally mangle a word, which costs nothing here because the output
+   is only ever compared against another string put through the same steps.
 
-Compare what is left as a set of content words. If one set contains the other,
-it is the same item: skip the write and say so in your confirmation. So "send
-dana the roof measurements" reduces to `send dana roof measurements`, the stored
-line reduces to `send dana whitfield roof measurements`, and the first is
-contained in the second, so it is a duplicate. Do not create a near duplicate
-with different wording. When two items share a verb and a person but nothing
-else, they are different items, so write the new one.
+Compare what is left as a set of content words. If one set contains the other, it
+is the same item: skip the write and say so in your confirmation. So "send Rangi
+the trip form email" reduces to `rangi trip form email` and a stored "Email Rangi
+about the trip forms" reduces to `rangi trip form`, which is contained in the
+first, so it is a duplicate. Do not create a near duplicate with different
+wording.
+
+This is a heuristic and it will land in the middle sometimes. When the two sets
+overlap heavily but neither contains the other, do not decide for them. Surface
+it and wait: "This looks close to 'Email Rangi about the trip forms', already on
+the list. Same thing, or a separate item?" Never drop a to-do on a partial match.
+When two items share only a name, or only a verb you were about to strip anyway,
+they are different items, so write the new one.
 
 Then add a line under `## Entries` in today's daily note pointing at the tracker,
 so the day reads as a complete record without splitting the truth:

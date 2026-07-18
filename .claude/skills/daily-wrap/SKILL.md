@@ -39,7 +39,43 @@ TZ=Europe/Lisbon date +%A
 ```
 
 Substitute whatever zone the profile names. Bare `date +%A` is wrong. Never infer
-a weekday from a date string.
+a weekday from a date string. If the profile has no timezone in it, stop and ask
+for one before you write anything. Never guess a zone and never fall back to the
+machine clock, because a wrap that lands in yesterday's file looks correct and
+stays wrong.
+
+The tracker check-in needs a date in the past, and past date arithmetic is not
+portable. On macOS the shell has BSD `date` and takes
+`TZ=Europe/Lisbon date -v-14d +%Y-%m-%d`. On Linux it has GNU `date` and takes
+`TZ=Europe/Lisbon date -d '14 days ago' +%Y-%m-%d`. Run one, and if the shell
+rejects the flag, run the other. Do not count back by hand.
+
+### When the config is not fully filled
+
+Check the answer slots, not the file text. Both config files carry instruction
+comments that describe the placeholder markers in prose, and those comments stay
+there forever, so a plain search for that shape matches on a fully configured
+vault every time. Look at what sits under each heading instead. Nothing in
+`config/templates/` is config: those slots are filled by skills on every run, so
+never read them as setup answers.
+
+A slot counts as filled when it holds anything the user put there, and
+`(skipped)` is something the user put there. Treat it as a filled answer, a
+deliberate pass on an optional question, never as a blocker.
+
+Then degrade rather than stop:
+
+- Every slot still unfilled, nothing written at all: the user has not been set
+  up. Say so in one line, offer the setup interview in CLAUDE.md, and stop.
+- Some filled, some not: run the wrap with what is there. No non-negotiables and
+  no custom question means the interview is the nine questions and nothing else,
+  with no mention of what is missing. No tag set means the note goes in without
+  tags.
+
+The one gap you cannot work around is the timezone, because the wrap has to know
+which day's file it is writing. Ask for it, wait, and do not guess.
+
+A partly filled profile is a normal state, not an error.
 
 Check whether a calendar connector is available. If one is, you will offer a pass
 over today's meetings after the interview. If not, the wrap runs exactly the same
@@ -116,8 +152,13 @@ With no calendar connector, skip this step silently.
 
 ### 2. Tracker check-in
 
-Read `tracker.md`. Surface at most five items total, grouped, one consolidated
-question per group. Never go item by item.
+Read `tracker.md`, taking items only from the thread sections below its
+`## Sections` heading. Everything above that heading documents the format, and
+one line there has the shape of an unchecked item without being one. Skip any
+line holding a placeholder in curly braces.
+
+Surface at most five items total, grouped, one consolidated question per group.
+Never go item by item.
 
 Never check a box the user did not tell you to check. A meeting note is evidence
 that a meeting happened, not evidence that their work around it is done, and a
@@ -141,8 +182,11 @@ item and ask plainly.
    the items that fall through, because nothing else in this list catches them
    and the morning briefing keeps asking for them until someone closes them.
    "Still open, still urgent?"
-4. **Stale**: two or three items with `captured:` more than fourteen days ago, no
-   `due:`, not `!high`. "Still doing these?"
+4. **Stale**: two or three items with `captured:` fourteen or more days ago, no
+   `due:`, not `!high`. "Still doing these?" Fourteen or more, not more than
+   fourteen, so an item sitting at exactly fourteen days is caught here rather
+   than falling between two definitions. The weekly recap draws the same line at
+   the same number.
 
 Apply their answer to `tracker.md` directly: check the box with a short outcome
 and the date, edit the text if the scope changed, add or move `due:`, change
@@ -190,11 +234,10 @@ filling `{{date}}` and `{{weekday}}`. Fill the `## End of Day Reflection` sectio
 ```
 
 Then the decisions from question 5 go in their own section. `## Decisions Made`
-is a top level section of the daily note and it sits directly after the
-`## End of Day Reflection` section, before `## Non-negotiables` if that one
-exists. Create it there if it is not there yet, and append to it if it is,
-because a capture earlier in the day may have opened it already. Never open a
-second one.
+is a top level section of the daily note and it sits directly before the
+`## End of Day Reflection` section. Create it there if it is not there yet, and
+append to it if it is, because a capture earlier in the day may have opened it
+already and put it in that same place. Never open a second one.
 
 ```markdown
 ## Decisions Made
@@ -221,7 +264,7 @@ the set in `config/profile.md`.
 Only if `config/season.md` names non-negotiables. If it does not, this section
 does not exist and you never bring it up.
 
-Append to today's daily note, below the decisions:
+Append to today's daily note as the last section, below the reflection:
 
 ```markdown
 ## Non-negotiables

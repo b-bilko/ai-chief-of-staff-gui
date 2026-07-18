@@ -20,6 +20,37 @@ It needs daily notes to work from. If the week has fewer than three, say so, run
 the review anyway on what exists, and keep it short. Never fill a thin week with
 invention.
 
+### Mark a thin week as thin
+
+A review built on one or two daily notes still lands in `reviews/` as a file
+named like any other, and the monthly, quarterly, and annual rungs read it as a
+week of coverage. On a vault that is a few days old that is how two days of notes
+turn into a permanent rung nobody questions later.
+
+So say it in the file. When the window holds fewer than three daily notes, add a
+fourth frontmatter field and a line under the title:
+
+```yaml
+---
+type: review
+date: 2026-03-18
+tags: ["#meta"]
+coverage: thin
+---
+```
+
+```markdown
+Built from 2 daily notes out of 7 days. Thin coverage, so read the sections below
+as a partial week rather than a full one.
+```
+
+Use the exact value `coverage: thin`, lowercase, because the rungs above look for
+that string. Count actual daily notes, not days in the window. Leave the field out
+entirely at three notes or more rather than writing `coverage: full`.
+
+The review itself gets shorter, not softer. Skip more sections, keep the ones with
+real material, and do not stretch two days into a week's worth of observations.
+
 ## Dates and week boundaries
 
 Read the timezone out of `config/profile.md` first, then attach it to every date
@@ -33,25 +64,56 @@ With `Europe/Lisbon` in the profile:
 - `TZ=Europe/Lisbon date +%A` for the weekday
 
 Never read a weekday off an ISO string. Compute the window boundaries the same
-way, zone attached. If the profile has no timezone yet, use the machine zone, say
-so once in your confirmation, and carry on.
+way, zone attached. Past date arithmetic is not portable, so pick the form that
+matches the machine: `TZ=Europe/Lisbon date -v-6d +%Y-%m-%d` on macOS,
+`TZ=Europe/Lisbon date -d '6 days ago' +%Y-%m-%d` on GNU. If you do not know
+which you are on, try one and fall back to the other when it errors. Never drop
+the `TZ=` to make a command work.
 
-The default window is the last seven days ending today, inclusive. If the user
-names a week, compute those boundaries explicitly and say the range back to them
-in one line before you start. State the range in the review itself, with weekday
-names taken from a zone-attached `date` call, so a reader in six months knows
-exactly what was covered.
+If `config/profile.md` has no timezone in it, stop and ask the user for theirs
+before you compute a single date. Do not fall back to the machine zone and do not
+guess from anything else. A boundary computed in the wrong zone drops or adds a
+day and nothing in the finished review says it happened. Setup collects the
+timezone, so this should never come up, and if it does the file is broken and
+worth fixing before the recap runs.
+
+### The window is a rolling seven days
+
+The default window is the last seven days ending today, inclusive. It is not a
+calendar week and it does not start on Monday. Run on a Wednesday and you get
+Thursday through Wednesday. If the user names a week instead, compute those
+boundaries explicitly and say the range back to them in one line before you
+start.
+
+Whatever the window turns out to be, the review has to carry it in a place nobody
+can miss. Put the full range with weekday names in the title, and repeat it in
+the first line of the body along with the fact that it is a rolling window rather
+than a calendar week:
+
+```markdown
+# Week of Thursday, 2026-03-12 through Wednesday, 2026-03-18
+
+Covers the seven days ending Wednesday, 2026-03-18. This is a rolling week, not a
+Monday to Sunday one.
+```
+
+Take every weekday name from a zone-attached `date` call, never from reading the
+ISO string. Someone opening this file in six months should not have to work out
+what was covered.
 
 ### Do not overwrite an existing review
 
 The output file is named for the last day in the window. Before you write, check
 whether `reviews/` already holds a file for that date.
 
-If one is there, stop and ask. Show the user its title and range, then let them
-choose: replace it, write this one under a different name, or cancel. Never
-overwrite a review without an explicit yes, and never merge the two silently.
-Reviews are what the monthly, quarterly, and annual rungs are built from, so a
-lost weekly quietly takes a piece out of every review above it.
+If one is there, stop and ask. Say when it was written and what it was built
+from, its title, its range, how many daily notes backed it, and whether it is
+marked `coverage: thin`. Then let them choose: replace it, write this one under a
+different name, or cancel. A review built from six daily notes should not be
+silently replaced by a rerun that can only see two. Never overwrite a review
+without an explicit yes, and never merge the two silently. Reviews are what the
+monthly, quarterly, and annual rungs are built from, so a lost weekly quietly
+takes a piece out of every review above it.
 
 ## Sources (read in this order)
 
@@ -256,7 +318,10 @@ long.
 ### Open Loops and Tracker Review
 
 From `tracker.md`, every open item, grouped into four buckets in this order. Skip
-any bucket that is empty.
+any bucket that is empty. Take items only from the thread sections below the
+`## Sections` heading, and skip any line holding a placeholder in curly braces,
+since the format documentation above that heading contains a line shaped like an
+unchecked item.
 
 1. **Overdue, handle these first.** `due:` before today, unchecked. Oldest at the
    top. Flag anything more than 30 days past due as long overdue.
@@ -264,13 +329,16 @@ any bucket that is empty.
 3. **Coming up in the next two weeks.** `due:` inside the next 14 days, sorted by
    date.
 4. **Stale, so commit, defer, or delete.** Open items with no `due:`, not
-   `!high`, and a `captured:` date more than 14 days ago. Oldest first. Cap at
+   `!high`, and a `captured:` date 14 or more days ago. Oldest first. Cap at
    five to eight unless something further down genuinely matters.
 
    The 14 day floor is deliberate and it matches the daily wrap's check in, so
-   the two rungs mean the same thing by stale. An item captured this week is
-   new, not stale. It stays out of this bucket even though it has no date and no
-   priority marker, and it is not evidence of anything yet.
+   the two rungs mean the same thing by stale. Both count day 14 itself as
+   stale. Write the boundary as 14 or more, never as more than 14, or an item
+   sitting at exactly fourteen days falls through the gap between the two rungs
+   on the one day it would have surfaced. An item captured this week is new, not
+   stale. It stays out of this bucket even though it has no date and no priority
+   marker, and it is not evidence of anything yet.
 
 Write each item in plain language rather than copying the raw markdown line, and
 fold the timing in where it helps: "call the vet back about Rosie's dental, due
@@ -379,8 +447,13 @@ tags: ["#meta"]
 ---
 ```
 
+Add `coverage: thin` as a fourth field when the window held fewer than three
+daily notes, as described above. That is the only case where this file carries a
+fourth field.
+
 Title the file with the range, for example `# Week of Monday, 2026-03-09 through
-Sunday, 2026-03-15`, then the sections in the order above.
+Sunday, 2026-03-15`. Then the window line, then the thin-coverage line if the
+week earned one, then the sections in the order above.
 
 End the file with a sources footer so the review can be audited later:
 

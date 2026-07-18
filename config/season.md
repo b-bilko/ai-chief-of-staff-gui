@@ -47,8 +47,14 @@ the end of a day.
 
 If you name these, the evening wrap runs a short check on them and every review
 after it (weekly, monthly, quarterly, annual) reads that check back to show you
-how the floor held. If you leave this blank, all of them skip it entirely and
-none of them mention it.
+how the floor held.
+
+Skip it and all of that turns off: the nightly check, the floor read in the
+weekly, monthly, quarterly, and annual reviews, and the line in your morning
+brief. Nothing will ask again or mention that it is missing, so the way to turn
+it back on later is the quarterly recap, which proposes a rewrite of this file
+and lets you answer then. You can also just edit this answer in yourself
+whenever you like.
 
 {{answer}}
 
@@ -60,6 +66,10 @@ day's note. The weekly and monthly reviews read those answers back together, so
 pick something worth seeing a month of at once, not something you can answer the
 same way every night.
 
-Leave blank to skip.
+Leave blank to skip. Skipping it means the wrap never asks and the four reviews
+that read a month or a quarter of answers back (weekly, monthly, quarterly,
+annual) lose that section. Nothing will remind you it is missing. The quarterly
+recap is where it comes back: it proposes a rewrite of this file and you can
+answer then, or edit this answer in yourself whenever you like.
 
 {{answer}}

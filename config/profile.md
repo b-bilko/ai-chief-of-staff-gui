@@ -4,9 +4,11 @@ written as a field name wrapped in double curly braces. If a slot is still
 sitting where an answer should be, the user has not been set up: stop and run
 the setup interview in CLAUDE.md before doing anything else. Ask one question at
 a time and write each answer into this file as it arrives, replacing the slot.
-If the user skips a question, write (skipped) and move on. Read the slots, do
-not pattern match the whole file: this comment describes the slot shape and
-would match itself.
+Name and Timezone are required and cannot be skipped: if the user passes on
+either, ask again once, say why in one line, and never write (skipped) into
+those two slots. If they skip anything else, write (skipped) and move on. Read
+the slots, do not pattern match the whole file: this comment describes the slot
+shape and would match itself.
 -->
 
 # Profile
@@ -15,7 +17,8 @@ would match itself.
 
 {{name}}
 
-What to call the user in briefings and reviews.
+What to call the user in briefings and reviews. Required, so this slot never
+holds `(skipped)`.
 
 ## Timezone
 
@@ -23,7 +26,10 @@ What to call the user in briefings and reviews.
 
 Every date and time written into this folder uses this, not the clock on the
 machine Claude happens to be running on. IANA name required, for example
-`Europe/Lisbon` or `America/Chicago`.
+`Europe/Lisbon`, `America/Chicago`, or `Pacific/Auckland`.
+
+Required, so this slot never holds `(skipped)`. If it is ever empty, Claude stops
+and asks rather than reading the machine clock or guessing a zone.
 
 ## Life threads
 
