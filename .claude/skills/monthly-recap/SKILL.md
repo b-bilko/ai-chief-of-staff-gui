@@ -15,19 +15,28 @@ At the end of a calendar month, or in the first few days of the next one. The
 user can also ask for a past month at any time.
 
 Confirm which month you are reviewing before you read anything. Compute the first
-day, the last day, and the run weekday with `date` through Bash. Never infer a
-weekday from an ISO string. Use the timezone in `config/profile.md` for every date
-you write. Title the review by month name and year, for example "April 2027".
+day, the last day, and the run weekday through Bash, with the timezone from
+`config/profile.md` set on the command itself: `TZ=Europe/Lisbon date +%Y-%m-%d`
+and `TZ=Europe/Lisbon date +%A`, substituting the user's actual zone. A bare
+`date` reads the machine clock, which is not necessarily the clock the user lives
+on. Never infer a weekday from an ISO string. Title the review by month name and
+year, for example "April 2027".
 
 If the month has fewer than two weekly recaps in `reviews/`, say so and ask
 whether to continue anyway. One weekly is not a month, and a review built on it
 will read like a padded week.
 
+If `reviews/YYYY-MM-monthly.md` already exists for the month you are about to
+write, stop and ask before replacing it. Say when it was written and what it was
+built from. A review assembled from four weeklies should not be silently
+overwritten by a thinner run.
+
 ## Sources (read in this order)
 
-1. `reviews/YYYY-MM-DD-weekly.md` for every week whose date falls in the month.
-   This is the spine of the whole review. The weeklies already reduced the daily
-   noise, so your work is synthesis across them, not re-reading the raw days.
+1. `reviews/YYYY-MM-DD-weekly.md` for every week counted in this month, decided by
+   the straddle rule below. This is the spine of the whole review. The weeklies
+   already reduced the daily noise, so your work is synthesis across them, not
+   re-reading the raw days.
 2. `tracker.md` for what stalled across the whole month. An item that showed up in
    two or three separate weekly stale lists is real signal and worth more than one
    that went stale once. Read the Completed archive too, since it holds what
@@ -48,6 +57,34 @@ that runs daily or weekly has already run. This review consumes their output.
 
 Connectors are not part of this pass. Calendar and email already fed the daily and
 weekly rungs, so nothing here needs them.
+
+## Weeks that straddle the month boundary
+
+Weeks do not line up with months. A weekly dated the fifth usually covers five
+days of the month before it. Sort weeklies by filename and those days either get
+counted in the wrong month or fall out of both.
+
+The rule: **a week is counted in the month that holds most of its days.** A week
+running March 30 through April 5 has five days in April, so it belongs to April.
+A week running March 27 through April 2 has five days in March, so it belongs to
+March. A short or partial week that splits evenly is counted in the month its file
+is dated in. Whole weeks only. A week is never split across two reviews, and never
+read into both.
+
+Do not leave that arithmetic invisible. Name the straddle in one line near the top
+of the review, in the user's terms:
+
+- "The week of March 30 through April 5 counts here, so the last two days of March
+  are in this review."
+- "March 30 and 31 sit inside a week counted in April. They are covered there, not
+  here."
+
+If a week counted in this month has no weekly yet, either because the month ended
+partway through it or because you are running early and the week has not closed,
+the fallback above applies: read that week's daily notes, and say in the review
+which days you read raw and which had not happened yet. Do not reach into `daily/`
+for a week that belongs to a neighboring month. Those days are that month's to
+report.
 
 ## Current season
 
@@ -93,7 +130,7 @@ weak win.
 
 ### Decisions of the Month
 
-Harvested from the Decisions Made sections in the weeklies, plus anything the
+Harvested from the `### Decisions Made` sections in the weeklies, plus anything the
 weeklies surfaced out of project files. Four to ten items total, grouped four
 ways. Drop any group that is empty.
 
@@ -110,7 +147,7 @@ ways. Drop any group that is empty.
 
 ### What Moved Forward
 
-Progress beyond the headline wins: things finished, shipped, resolved, or
+Progress beyond the headline wins: things finished, delivered, resolved, or
 advanced. Lead with the most meaningful. If the list runs long, group the small
 items under a single closing bullet.
 
@@ -136,10 +173,11 @@ that one thing a concrete movement read for the month, with the same specificity
 progress report would carry.
 
 Cover what entered, what advanced, what stalled, and what ended. Name the actual
-things, not categories. If the season's primary focus is a book, say which
-chapters got drafted and which stalled. If it is a business, say which
-conversations moved and which went quiet. If it is recovering from a hard year,
-say what the month's evidence shows about that.
+things, not categories. If the season's primary focus is a book, say which chapters
+got drafted and which stalled. If it is getting a practice off the ground, say which
+clients came in and which referrals went cold. If it is a renovation, say which
+rooms are finished and which are still open to the studs. If it is recovering from a
+hard year, say what the month's evidence shows about that.
 
 If the main thing barely moved in thirty days, say so plainly. That is usually the
 most useful sentence in the review.
@@ -148,9 +186,24 @@ most useful sentence in the review.
 
 Energy and mood across the month, plus any rhythm the notes actually track, such
 as sleep, exercise, or reading. Describe the shape: steady, climbing, volatile, a
-recovery that held or did not. If `config/season.md` names non-negotiables, read
-the floor against them explicitly. Tie shape to cause only where the sources
-support the link.
+recovery that held or did not. Tie shape to cause only where the sources support
+the link.
+
+If `config/season.md` question 4 names non-negotiables, read the floor against them
+explicitly: how many days each one held across the month, where the misses landed,
+and whether they clustered. Report the inputs, do not prescribe. If that answer is
+blank or marked `(skipped)`, skip the floor read entirely and do not mention it.
+
+### The Evening Question
+
+**Only when `config/season.md` question 5 names one.** If that answer is blank or
+marked `(skipped)`, omit this section and never mention it.
+
+The wrap asks that question every night, so a month holds around thirty answers
+and nothing below this rung has read them together. Give back what a single night
+could not show: what the answers keep circling, where they turned, and any stretch
+where they went flat or went unanswered. Two to four bullets, quoting two or three
+of the user's own answers rather than paraphrasing all of them.
 
 ### Patterns: What Hardened, What Faded
 
@@ -221,8 +274,8 @@ the month.
 
 2. Title the body `# Monthly Recap: <Month> <Year>`.
 3. End with a sources footer, in the same shape the weekly uses, wikilinking the
-   weekly recaps you read plus a note naming any week you had to fill from daily
-   notes:
+   weekly recaps you read, naming any week you had to fill from daily notes, and
+   naming the straddling week at either end and which month it counted in:
 
 ```markdown
 ---
@@ -230,14 +283,19 @@ the month.
 **Sources:** [[2027-04-05-weekly]], [[2027-04-12-weekly]], [[2027-04-19-weekly]],
 [[2027-04-26-weekly]], tracker.md
 ```
-4. Commit:
+4. Commit, staging the file by its own path:
 
 ```
-git add -A && git commit -m "monthly-recap: YYYY-MM"
+git add reviews/YYYY-MM-monthly.md
+git commit -m "monthly-recap: YYYY-MM"
 ```
 
-Then check for a remote and push if one exists. If there is no remote, stop after
-the commit and say nothing about it.
+Never `git add -A`. This folder is a working record, so there is usually unrelated
+work sitting in the tree, and a review run has no business committing it.
+
+Then check for a remote. Push only to a remote the user owns. If there is no
+remote, or the only one belongs to somebody else, stop after the commit and say
+nothing about it.
 
 5. Confirm with a short summary and the output path. Do not read the review back
    at the user.

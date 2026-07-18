@@ -24,7 +24,8 @@ line and keep going. If the tracker is empty, the brief gets shorter, not padded
 1. `tracker.md`. The to-do list. It drives Top of Mind Today, Today's Priorities,
    Open Loops, and Coming Up This Week. Read it before anything else.
 2. Yesterday's daily note, `daily/YYYY-MM-DD.md`. Look for the End of Day
-   Reflection and the Decisions Made section the wrap writes.
+   Reflection and the `## Decisions Made` section the wrap writes, spelled
+   exactly that way.
 3. The last seven daily notes. Texture, unresolved threads, anything repeating.
 4. Recent files in `meetings/`, roughly the last two weeks. What was agreed, and
    what has not moved since.
@@ -38,14 +39,25 @@ section, and do not narrate the absence more than once.
 
 ## Dates
 
-Get today from Bash: `date +%Y-%m-%d` for the date and `date +%A` for the
-weekday. Never read a weekday off an ISO string. For past days, compute the same
-way (`date -v-1d +%A` on macOS, `date -d yesterday +%A` on GNU) or copy the
-weekday out of the daily note's own heading.
+Read the timezone out of `config/profile.md` first, then attach it to every date
+command. A bare `date` reads the machine clock, which is a different day from the
+user's whenever they are travelling or the machine is set to something else.
 
-Use the timezone in `config/profile.md` for every time you state. If a day you
-want to reference cannot be pinned down, say "a few days ago" rather than
-guessing a weekday.
+With `Europe/Lisbon` in the profile:
+
+- `TZ=Europe/Lisbon date +%Y-%m-%d` for today's date
+- `TZ=Europe/Lisbon date +%A` for the weekday
+
+Never read a weekday off an ISO string. For past days, compute them the same way
+with the zone still attached (`TZ=Europe/Lisbon date -v-1d +%A` on macOS,
+`TZ=Europe/Lisbon date -d yesterday +%A` on GNU), or copy the weekday out of the
+daily note's own heading.
+
+If the profile has no timezone yet, use the machine zone, say once that you are
+guessing at it, and keep going. Do not stop the brief over it.
+
+Use that same zone for every time you state. If a day you want to reference
+cannot be pinned down, say "a few days ago" rather than guessing a weekday.
 
 ## Reading the tracker
 
@@ -82,8 +94,26 @@ season points at wins. If `config/season.md` names things to track without being
 asked, check for them in the last week's notes even when the user has not
 mentioned them.
 
-If either file still has `{{placeholder}}` markers, stop and run the setup
-interview in CLAUDE.md first.
+### When the config is not fully filled
+
+Check the answer slots, not the file text. Both config files carry instruction
+comments that name the placeholder markers in prose, and those comments stay
+there forever, so a plain search for that string matches on a fully configured
+vault every time. Look at what sits under each heading instead.
+
+A slot counts as filled when it holds anything the user put there, and
+`(skipped)` is something the user put there. Treat it as a filled answer, a
+deliberate pass on an optional question, never as a blocker.
+
+Then degrade rather than stop:
+
+- Every slot still unfilled, nothing written at all: the user has not been set
+  up. Say so in one line, offer the setup interview in CLAUDE.md, and stop.
+- Some filled, some not: brief on what is there. No timezone means you say so
+  once and use the machine zone. No season means no season lens, so the brief
+  runs without one and says nothing about it.
+
+A partly filled profile is a normal state, not an error.
 
 ## What to include
 
@@ -123,6 +153,24 @@ for it yourself across the last seven daily notes and the tracker:
 Curate hard. Three items land, ten items get ignored. Say what is slipping and
 since when, not what to do about it.
 
+### Non-negotiables
+
+**Only when `config/season.md` question 4 names them, and only when the floor has
+actually been slipping.** One line, and only one.
+
+The wrap writes a `## Non-negotiables` block into each daily note. Read the last
+seven of them. Surface a line when one of the user's own non-negotiables has been
+missed three or more nights running, or missed on most of the last week. Name
+which one and how many days, nothing else:
+
+- Asleep by 11 has missed 4 nights running
+
+If they are holding, if fewer than four recent notes carry the block, or if the
+season names none, the section does not exist and you never bring it up. Do not
+report a floor that is holding, do not attach a suggestion, and do not raise the
+same slip every morning for a week. This is the user's own line, noticed once,
+not a habit tracker and not a nag.
+
 ### Today's Schedule
 
 **Only when a calendar connector is available.** Check for one before you write
@@ -146,7 +194,8 @@ Three items maximum. Pull from, in order:
 4. What today's schedule implies, if you have a calendar.
 
 If more than three feel urgent, the season breaks the tie. Write each as a thing
-to do, not a category. "Send Priya the migration decision" beats "project work."
+to do, not a category. "Call the clinic back about the referral" beats "family
+admin."
 
 ### Open Loops
 
@@ -157,7 +206,7 @@ task label.
 
 Shape it like this:
 
-- Get back to Priya about the migration date
+- Get back to the landlord about the lease renewal
 - Renew the studio membership before it lapses on Friday
 - Decide whether the Tuesday class is still worth the commute
 
@@ -185,6 +234,10 @@ across recent days. Worth naming:
 Check `patterns/` first. If the theme already has a file, say it is continuing
 rather than presenting it as a discovery. If there is no real pattern, skip the
 section. Never manufacture one to have something to say.
+
+This is an observation spoken out loud and nothing more. The briefing never
+writes to `patterns/`. Promotion is the weekly recap's call and it holds a much
+higher bar, so something worth mentioning here may never earn a file.
 
 ### People on Your Radar
 

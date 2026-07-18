@@ -21,7 +21,7 @@ read as a question.
 
 Do not capture:
 
-- Direct questions ("what do you think about this?", "who is Priya again?").
+- Direct questions ("what do you think about this?", "who is Nadia again?").
   Answer them. Afterward you can ask whether to save anything from the exchange.
 - Slash commands.
 - Edit instructions ("change that heading", "add this line to the tracker").
@@ -39,8 +39,34 @@ Read `config/profile.md` for the user's name, timezone, life threads, and tag
 set. Read `config/season.md` for what this stretch is about, which tells you
 whether a passing mention belongs to something they are actively tracking.
 
-Get today's date in the profile timezone, and get the weekday from `date +%A`
-through Bash. Never read a weekday off an ISO string.
+Get the timezone out of `config/profile.md` and pass it to `date` through Bash,
+so the clock on the machine never decides what day it is. With
+`Europe/Lisbon` in the profile:
+
+```
+TZ=Europe/Lisbon date +%Y-%m-%d
+TZ=Europe/Lisbon date +%A
+```
+
+Substitute whatever zone the profile names. Bare `date +%A` is wrong. Never read
+a weekday off an ISO string.
+
+## Backdating
+
+Most captures are about today. When the input says otherwise ("yesterday",
+"Monday night", "this happened on the 3rd"), write it to that day's note instead
+of today's.
+
+- Resolve the phrase with the same timezone aware `date` call, never by counting
+  in your head.
+- For "yesterday" or an outright date, just write it. For anything loose ("last
+  week", "a few days ago"), say the resolved date back in one line first and wait.
+- If `daily/YYYY-MM-DD.md` for that day does not exist, create it from the
+  template with that day's date and weekday.
+- Everything else in this skill works the same. Cross links point at that day's
+  note, not today's.
+- On a tracker item, the `captured:` stamp keeps the real date you wrote it. Only
+  the daily note moves.
 
 ## Step 1: classify
 
@@ -73,14 +99,17 @@ Find or create `daily/YYYY-MM-DD.md` from `config/templates/daily-note.md`,
 filling `{{date}}` and `{{weekday}}`. Append the content verbatim under
 `## Entries`, newest at the bottom.
 
-If the entry records something the user decided, put it under a
-`## Decisions Made` heading in the same file instead, creating that heading if it
-is not there yet. The weekly recap harvests decisions by that heading name, so
-the wording of the heading matters.
+If the entry records something the user decided, put it under `## Decisions Made`
+instead. That heading is a top level section of the daily note and it sits
+directly after the `## End of Day Reflection` section, before `## Non-negotiables`
+if that one exists. Create it there if it is not there yet, and append to it if it
+is. Never open a second one. The weekly recap harvests decisions by that exact
+heading name, so both the wording and the position matter.
 
-Wikilink every person, project, and company: `[[Priya Raman]]`, `[[Atlas
-migration]]`. If the linked file does not exist, still write the link, and
-mention in your confirmation that the note is missing.
+Wikilink every person, project, and company: `[[Nadia Okonkwo]]`, `[[kitchen
+remodel]]`. If the linked file does not exist, still write the link, and mention
+in your confirmation that the note is missing. Do not wikilink the user
+themselves.
 
 Add tags to the note's frontmatter from the user's tag set in
 `config/profile.md`. Do not invent a tag. If nothing fits, propose one in your
@@ -88,9 +117,10 @@ confirmation and wait.
 
 ### Meeting note
 
-Create `meetings/YYYY-MM-DD - Descriptive Name.md`. Title case, spaces, no
-slugs: `meetings/2026-03-14 - Migration sync with Priya.md`. If a file for that
-conversation already exists, append rather than making a second one.
+Create `meetings/YYYY-MM-DD - Descriptive name.md`. Sentence case, meaning you
+capitalize the first word and any proper nouns and nothing else. Spaces, no
+slugs: `meetings/2026-03-14 - Roof estimate with Dana Whitfield.md`. If a file
+for that conversation already exists, append rather than making a second one.
 
 ```yaml
 ---
@@ -106,14 +136,18 @@ the content supports them: `## What was discussed`, `## Decisions`,
 `## Next steps`. Wikilink every attendee in the body. Attendees live in the body,
 not in frontmatter.
 
+Never wikilink the user. They were at their own meeting, and `people/` is for
+other people. If a pasted export lists them in the attendee line, leave their
+name as plain text.
+
 Then add one line to today's daily note under `## Entries`:
 
 ```
-- Met with [[Priya Raman]] about the Atlas migration, see [[2026-03-14 - Migration sync with Priya]]
+- Met with [[Dana Whitfield]] about the roof estimate, see [[2026-03-14 - Roof estimate with Dana Whitfield]]
 ```
 
-Apply the person rules below to each named attendee, and pull any commitment out
-into `tracker.md`.
+Apply the person rules below to each named attendee, and pull the user's own
+commitments out into `tracker.md`.
 
 **Pasted note-taker exports.** Granola, Gong, and Zoom output all land here.
 Signals: an attendee list at the top, speaker labels, timestamps, a block titled
@@ -124,8 +158,18 @@ paste as a meeting note, not a daily entry.
   product's own chrome, meaning banners, share links, and marketing footers.
 - If a full transcript is pasted, keep it under a `## Transcript` heading at the
   bottom of the same file rather than throwing it away or making a second file.
-- Pull every action item into `tracker.md` under the right thread, one line each,
-  with the person wikilinked.
+- Pull only the action items the user owns into `tracker.md`, one line each, with
+  any other person wikilinked. `tracker.md` is the user's to-do list and nothing
+  else. An item belongs to the user when they said they would do it, when the
+  export assigns it to them by name, or when it is unassigned and clearly theirs
+  from the context.
+- Everyone else's action items stay in the meeting note, under the export's own
+  heading, exactly as written. They are still a record, they are just not the
+  user's work. Say which ones you left there in your confirmation, for example
+  "2 items to tracker.md, 3 left in the note as other people's".
+- When ownership is genuinely unclear on an item, leave it in the note and name
+  it in your confirmation. Better a missed to-do the user can see than a tracker
+  they stop trusting.
 - If the export names attendees you have no file for, say so in the
   confirmation. Do not create person files for everyone in a large invite list.
 
@@ -137,7 +181,7 @@ exists, append a dated entry:
 ```markdown
 ## 2026-03-14
 
-Moved from platform to the payments team. Owns the migration cutover now.
+Moved off the day shift to nights. Runs the triage rotation now.
 ```
 
 If a standing fact changed, also correct it at the top of the file. If there is
@@ -150,7 +194,7 @@ date: 2026-03-14
 tags: ["#work"]
 ---
 
-# Priya Raman
+# Nadia Okonkwo
 
 Where they work, what they do, how the user knows them. Only what is known.
 
@@ -192,8 +236,12 @@ Append to `tracker.md` under the thread section that fits, using the thread name
 from `config/profile.md`. Create a section only when a thread has its first item.
 
 ```
-- [ ] Send [[Priya Raman]] the cutover plan !high due:2026-03-20 <!-- captured: 2026-03-14 -->
+- [ ] Send [[Dana Whitfield]] the roof measurements !high due:2026-03-20 <!-- captured: 2026-03-14 -->
 ```
+
+Only the user's own to-dos go here. If the input names something someone else
+owes them, that is a fact for the person note or the meeting note, not a line in
+`tracker.md`.
 
 **Priority.** Use what the user said. If they did not say, infer from the words
 they used, and prefer no marker over a wrong one.
@@ -208,23 +256,36 @@ they used, and prefer no marker over a wrong one.
 phrase from the item text so the line reads cleanly.
 
 - today, tomorrow: today, today plus one.
-- "by Friday" and other weekdays: the next occurrence of that weekday. Confirm
-  the weekday with `date`, never by counting in your head.
+- "by Friday" and other weekdays: the next occurrence of that weekday. Confirm it
+  with the timezone aware `date` call above, never by counting in your head.
 - "this week" and "by EOW": the coming Friday. "next week": Friday of next week.
 - "end of month": the last day of the current month.
 - "in N days" or "in N weeks": today plus N days, or N times seven.
 - `MM/DD`: this year if it has not passed, otherwise next year.
 
-**Dedupe.** Before appending, scan the unchecked items in `tracker.md` for a
-case insensitive substring match on the item text. If one is already there, skip
-the write and say so in your confirmation. Do not create a near duplicate with
-different wording.
+**Dedupe.** Before appending, compare the new item against every unchecked item
+in `tracker.md`. A raw text match does not work here, because the stored line
+carries wikilinks and metadata the user never typed. Normalize both sides first:
+
+1. Strip `[[` and `]]`, so `[[Dana Whitfield]]` becomes `Dana Whitfield`.
+2. Strip the metadata, meaning `!high`, `!med`, `!low`, `due:...`, the checkbox,
+   and the `<!-- captured: ... -->` comment.
+3. Lowercase, drop punctuation, and drop filler words (a, an, the, to, for, my,
+   about, on).
+
+Compare what is left as a set of content words. If one set contains the other,
+it is the same item: skip the write and say so in your confirmation. So "send
+dana the roof measurements" reduces to `send dana roof measurements`, the stored
+line reduces to `send dana whitfield roof measurements`, and the first is
+contained in the second, so it is a duplicate. Do not create a near duplicate
+with different wording. When two items share a verb and a person but nothing
+else, they are different items, so write the new one.
 
 Then add a line under `## Entries` in today's daily note pointing at the tracker,
 so the day reads as a complete record without splitting the truth:
 
 ```
-- [ ] Send [[Priya Raman]] the cutover plan, see [[tracker]]
+- [ ] Send [[Dana Whitfield]] the roof measurements, see [[tracker]]
 ```
 
 ## Output
@@ -232,19 +293,23 @@ so the day reads as a complete record without splitting the truth:
 One or two lines. What you wrote, where, and what you linked.
 
 ```
-Captured -> daily/2026-03-14.md, linked [[Priya Raman]]
+Captured -> daily/2026-03-14.md, linked [[Nadia Okonkwo]]
 ```
 
 ```
-Captured -> meetings/2026-03-14 - Migration sync with Priya.md, 2 items to tracker.md, linked [[Priya Raman]]
+Captured -> meetings/2026-03-14 - Roof estimate with Dana Whitfield.md, 1 item to tracker.md, 2 left in the note as other people's
 ```
 
 ```
-Captured -> tracker.md under Work, !high due:2026-03-20
+Captured -> tracker.md under Home, !high due:2026-03-20
 ```
 
 ```
-Already in tracker.md: "send the cutover plan". Nothing written.
+Already in tracker.md: "send Dana the roof measurements". Nothing written.
+```
+
+```
+Captured -> daily/2026-03-13.md (yesterday), linked [[Nadia Okonkwo]]
 ```
 
 If you made a call the user might disagree with, add one line and stop there:
@@ -258,18 +323,23 @@ one question per capture, and ask it before you write, not after.
 
 After the writes:
 
+Stage the files you actually touched, by path. Never `git add -A`, because it
+sweeps up whatever else is sitting in the folder:
+
 ```
-git add -A && git commit -m "capture: migration sync with Priya"
+git add daily/2026-03-14.md meetings/2026-03-14\ -\ Roof\ estimate\ with\ Dana\ Whitfield.md tracker.md
+git commit -m "capture: roof estimate with Dana"
 ```
 
 The message is three to seven words describing what was captured. Then check for
-a remote. If one exists, push. If not, say nothing about it.
+a remote. Push only to a remote the user owns, and if there is none, say nothing
+about it.
 
 ## Tone and format rules
 
-- Verbatim wins. If they wrote "this launch is a mess", the file says "this
-  launch is a mess", not "the launch faced challenges". Their phrasing is the
-  whole point of keeping the record.
+- Verbatim wins. If they wrote "today was a slog", the file says "today was a
+  slog", not "the day presented some challenges". Their phrasing is the whole
+  point of keeping the record.
 - Never discard content. Everything they typed ends up somewhere.
 - Cross link every route. A meeting note with no line in the daily note, or a
   person update that never surfaces, is a bug.

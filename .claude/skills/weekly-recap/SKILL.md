@@ -22,25 +22,44 @@ invention.
 
 ## Dates and week boundaries
 
-Get today from Bash: `date +%Y-%m-%d` and `date +%A`. Never read a weekday off an
-ISO string. Use the timezone in `config/profile.md`.
+Read the timezone out of `config/profile.md` first, then attach it to every date
+command. A bare `date` reads the machine clock, which is a different day from the
+user's whenever they are travelling or the machine is set to something else, and
+a week boundary computed in the wrong zone silently drops a day.
+
+With `Europe/Lisbon` in the profile:
+
+- `TZ=Europe/Lisbon date +%Y-%m-%d` for today's date
+- `TZ=Europe/Lisbon date +%A` for the weekday
+
+Never read a weekday off an ISO string. Compute the window boundaries the same
+way, zone attached. If the profile has no timezone yet, use the machine zone, say
+so once in your confirmation, and carry on.
 
 The default window is the last seven days ending today, inclusive. If the user
 names a week, compute those boundaries explicitly and say the range back to them
 in one line before you start. State the range in the review itself, with weekday
-names taken from `date`, so a reader in six months knows exactly what was
-covered.
+names taken from a zone-attached `date` call, so a reader in six months knows
+exactly what was covered.
 
-The output file is named for the last day in the window. If a review already
-exists for that date, ask before replacing it.
+### Do not overwrite an existing review
+
+The output file is named for the last day in the window. Before you write, check
+whether `reviews/` already holds a file for that date.
+
+If one is there, stop and ask. Show the user its title and range, then let them
+choose: replace it, write this one under a different name, or cancel. Never
+overwrite a review without an explicit yes, and never merge the two silently.
+Reviews are what the monthly, quarterly, and annual rungs are built from, so a
+lost weekly quietly takes a piece out of every review above it.
 
 ## Sources (read in this order)
 
 1. `tracker.md`. Drives the Open Loops and Tracker Review section, and the
    Completed (Archive) section feeds the wins list.
 2. Every `daily/YYYY-MM-DD.md` in the window. Read the whole note: the entries,
-   the End of Day Reflection, and the Decisions Made section if the wrap wrote
-   one.
+   the End of Day Reflection, and the `## Decisions Made` section if the wrap
+   wrote one, matching that heading exactly.
 3. Every file in `meetings/` dated inside the window.
 4. `patterns/`, so you build on themes already recognized instead of restating
    them as new.
@@ -62,10 +81,32 @@ The profile gives you the life threads. Those are the threads the review reports
 against, so a thread that went untouched all week is worth naming even when
 nothing went wrong.
 
-The season sets what counted as meaningful this week and feeds two sections
-directly: Non-negotiables (question 4) and The Honest Score. If either config
-file still has `{{placeholder}}` markers, stop and run the setup interview in
-CLAUDE.md first.
+The season sets what counted as meaningful this week and feeds three sections
+directly: Non-negotiables (question 4), Your Evening Question (question 5), and
+The Honest Score.
+
+### When the config is not fully filled
+
+Check the answer slots, not the file text. Both config files carry instruction
+comments that name the placeholder markers in prose, and those comments stay
+there forever, so a plain search for that string matches on a fully configured
+vault every time. Look at what sits under each numbered heading instead.
+
+A slot counts as filled when it holds anything the user put there, and
+`(skipped)` is something the user put there. It is a deliberate pass on an
+optional question, so read it as a filled answer and move on. A skipped season
+question must never block the recap. Questions 4 and 5 are optional by design,
+and skipping one only means the section it feeds does not get written.
+
+Then degrade rather than stop:
+
+- Every slot still unfilled, nothing written anywhere: the user has not been set
+  up. Say so in one line, offer the setup interview in CLAUDE.md, and stop.
+- Some filled, some not: run the recap on what is there. No season means no
+  season lens, so The Honest Score reports against the profile's life threads
+  instead and the recap says nothing about the missing file.
+
+A partly filled config is a normal state, not an error.
 
 ## Before you compose
 
@@ -91,16 +132,36 @@ flags things, nothing else.
 Scan the trailing 90 days of `daily/` notes and anything in `reviews/` for
 repeating themes. Look for:
 
-- A feeling or a word the user keeps using across separate days.
-- The same frustration or blocker surfacing again and again.
-- An intention stated repeatedly with no action behind it.
+- A feeling or a word the user keeps reaching for in unrelated contexts.
+- The same kind of frustration surfacing in different places, rather than one
+  problem retold.
+- Intentions stated and left alone, where the not acting is the through line and
+  no single task is.
 - A person mentioned often and never actually contacted, or one who used to come
   up constantly and has gone quiet.
-- A subject circled many times without a decision landing.
+- A subject circled from several angles without a decision landing.
 - Something the season says matters that almost never appears in the notes.
 
-**The threshold is three or more confirming signals across two or more separate
-days.** Below that, it is not a pattern.
+**The threshold. All three parts have to hold. Miss any one and it is not a
+pattern.**
+
+1. **Volume.** Three or more confirming signals, on three or more separate days.
+2. **Independence.** Those signals come from at least two distinct subjects or
+   occasions. One thing brought up again and again is a single signal recorded
+   repeatedly, not a theme. The same unsent email raised on Monday, Tuesday, and
+   Wednesday counts once, no matter how many notes it appears in. The same
+   avoidance showing up around an unsent email, a postponed dentist appointment,
+   and a call home nobody made counts as three.
+3. **History.** At least 30 days of daily notes exist, and the confirming signals
+   span 14 days or more. A vault two weeks old has no past to compare against,
+   so it cannot tell a pattern from an ordinary bad week.
+
+Why it is this strict: `patterns/` is permanent and append-only, so a theme
+promoted in week one is still sitting there a year later whether or not it ever
+recurred. A file that never earns a second entry is noise the annual review has
+to clean up. Early on, almost nothing clears this bar, and that is the design
+working. If the user asks why the section keeps coming up empty, tell them
+plainly that there is not enough history yet and roughly when there will be.
 
 For each theme that clears the bar, append to `patterns/<theme-slug>.md`. Look
 for an existing file first with a loose name match, so "sleep-and-energy" does
@@ -123,9 +184,13 @@ tags: ["#meta"]
 Two to four sentences describing what you see. Cite the signals. Do not
 interpret motive and do not suggest a fix.
 
-Signals: 4 daily notes across 3 days
+Signals: 4 across 3 days, 3 separate occasions
 Evidence: [[2026-03-09]], [[2026-03-11]], [[2026-03-14]]
 ```
+
+Record the occasion count, not just the signal count. It is the line that shows
+a later reader the theme cleared the independence bar rather than being one
+worry counted several times.
 
 An append to an existing file is the same block, a new `## YYYY-MM-DD` heading
 and its evidence, added at the bottom. If the theme has not changed since the
@@ -161,16 +226,18 @@ inventing a weak one.
 
 ### Decisions Made
 
-Harvest the Decisions Made sections the daily wrap wrote into this week's daily
-notes. Also pick up decisions stated plainly in meeting notes or in the entries
-themselves, even when the wrap did not catch them.
+Harvest the `## Decisions Made` sections the daily wrap wrote into this week's
+daily notes, matching that heading exactly. Also pick up decisions stated plainly
+in meeting notes or in the entries themselves, even when the wrap did not catch
+them.
 
 Two to six items, one line each: what was decided, and why. Keep the user's own
 reasoning rather than a cleaned up version of it.
 
-- Moved the migration to April so Priya's team can finish testing first
-- Said no to the Thursday standing meeting, it was costing a morning for a status
-  update
+- Pushed the kitchen tile start to April so the crew is not sitting idle waiting
+  on a back order
+- Said no to the Thursday evening class, it was costing the only night at home
+  all week
 
 If something was decided and then reversed inside the same week, say so on the
 same line and name both days. Reversals are the most useful thing this section
@@ -181,7 +248,7 @@ with no decisions in it is worth knowing about.
 
 ### What Got Done
 
-What the user completed, shipped, resolved, or moved forward beyond the headline
+What the user completed, finished, resolved, or moved forward beyond the headline
 wins. Natural phrases, not task labels. Lead with what mattered most and group
 the tail under a single "and a handful of smaller things" line when the list runs
 long.
@@ -196,13 +263,18 @@ any bucket that is empty.
 2. **High priority, already on your radar.** `!high` items not yet overdue.
 3. **Coming up in the next two weeks.** `due:` inside the next 14 days, sorted by
    date.
-4. **Stale, so commit, defer, or delete.** Open items with no `due:` and no
-   `!high`, oldest `captured:` date first. Cap at five to eight unless something
-   further down genuinely matters.
+4. **Stale, so commit, defer, or delete.** Open items with no `due:`, not
+   `!high`, and a `captured:` date more than 14 days ago. Oldest first. Cap at
+   five to eight unless something further down genuinely matters.
+
+   The 14 day floor is deliberate and it matches the daily wrap's check in, so
+   the two rungs mean the same thing by stale. An item captured this week is
+   new, not stale. It stays out of this bucket even though it has no date and no
+   priority marker, and it is not evidence of anything yet.
 
 Write each item in plain language rather than copying the raw markdown line, and
-fold the timing in where it helps: "get back to Priya about the migration date,
-due tomorrow and two weeks past the original target."
+fold the timing in where it helps: "call the vet back about Rosie's dental, due
+tomorrow and two weeks past when you said you would."
 
 If an email connector is live, add a short subsection after the four buckets for
 threads still waiting on a reply, one to three lines, who and what and how long.
@@ -232,16 +304,21 @@ Then, if there are weak signals that did not clear the bar:
 
 **Watching (not yet a pattern)**
 
-One line each, three maximum. Say what you noticed and why it does not qualify
-yet: "mood dipped two days this week, both after late nights, not enough to call
-it a trend."
+One line each, three maximum. Say what you noticed and which part of the bar it
+missed, so the user sees the reasoning instead of a verdict:
+
+- Mood dipped two days this week, both after late nights, not enough days yet
+- The unsent email came up three days running, but that is one thing repeated
+  rather than three separate occasions
+- Money came up twice in a way that felt heavier than usual, and there are only
+  3 weeks of notes to compare against so far
 
 If nothing was promoted and nothing is worth watching, skip the whole section.
 
 ### Non-negotiables
 
 **Only when `config/season.md` question 4 names them.** If that answer is blank
-or skipped, omit this section entirely and never mention it.
+or reads `(skipped)`, omit this section entirely and never mention it.
 
 When they exist, give a short factual read on how they held this week. Pull from
 the wrap's check in the daily notes. Two to four bullets: how many days each one
@@ -249,6 +326,22 @@ held, where the misses landed, and whether they clustered on the hard days.
 
 Report the inputs, do not prescribe. If something slipped, name it plainly and
 stop there. What to do about it is the user's call.
+
+### Your Evening Question
+
+**Only when `config/season.md` question 5 defines one.** If it is blank or reads
+`(skipped)`, this section does not exist and you never mention it.
+
+The wrap has been asking that question every night and filing the answer in a
+subsection of each reflection. This is the first thing that reads them back.
+Open with the question as the user worded it, then two to four bullets on the
+week's answers: what came up more than once, where an answer changed across the
+week, and any night that landed well outside the rest. Quote their own phrasing
+where a phrase repeats, since the repeat is the finding.
+
+Same register as Non-negotiables. Report what they said and stop. Do not
+interpret it, do not score it, and do not suggest a better question. If only one
+or two nights have an answer, one line saying so is the whole section.
 
 ### The Honest Score
 
@@ -295,18 +388,29 @@ End the file with a sources footer so the review can be audited later:
 ---
 
 **Sources:** [[2026-03-09]], [[2026-03-10]], [[2026-03-12]],
-[[2026-03-14 - Migration sync with Priya]], tracker.md
+[[2026-03-14 - Walkthrough with the roofer]], tracker.md
 ```
 
 List every daily note and meeting note actually read, and name the days with no
-note. Then commit:
+note. Then commit.
+
+Stage by path, naming only the files this run actually touched. That is the
+review, plus `tracker.md` if cleanup moved or flagged anything, plus any pattern
+file you appended to:
 
 ```
-git add -A && git commit -m "weekly-recap: week of 2026-03-09"
+git add reviews/2026-03-15-weekly.md tracker.md patterns/sleep-and-energy.md
+git commit -m "weekly-recap: week of 2026-03-09"
 ```
 
-Push only if a remote exists. If there is none, stop after the commit and say
-nothing about it.
+Never use `git add -A`. It sweeps in whatever else is sitting uncommitted in the
+folder, including half-written notes the user has not decided about, and it puts
+them in a commit labelled as a recap.
+
+Push only when a remote exists and it is one the user owns. If there is no
+remote, or the remote is a repository they cannot push to (a clone of someone
+else's template still points at the original), stop after the commit and say
+nothing about it. Do not add a remote and do not offer to.
 
 Confirm to the user in two or three lines: the file you wrote, any patterns
 promoted, and anything the tracker cleanup moved or flagged. Do not reprint the
@@ -328,8 +432,11 @@ Format:
   sentences, natural connective phrases, not a task app dump.
 - The only prose line is the closing one. Any paragraph you cannot avoid stays
   at three or four sentences.
-- Whitespace between sections. Bold section names, and write so they still work
-  with the formatting stripped.
+- Whitespace between sections. Section names are `###` headings in the file you
+  write, spelled the way this spec spells them, which is what the monthly,
+  quarterly, and annual rungs use too. Bold is for sub-labels inside a section,
+  not for section names. Write so each section still reads with the formatting
+  stripped.
 - No em dashes and no double hyphens anywhere in the review you write. Use
   commas, parentheses, or a new sentence. Markdown `---` rules are fine.
 - Second person throughout.

@@ -1,6 +1,5 @@
 ---
 type: note
-date: {{date}}
 tags: ["#meta"]
 ---
 
@@ -8,6 +7,10 @@ tags: ["#meta"]
 
 The one to-do list. Everything actionable lands here, whether you typed it
 yourself or it fell out of a capture, a wrap, or a meeting note.
+
+This file has no `date` in its frontmatter on purpose. It is a standing file
+that never stops being current, so a single date on it would be wrong the day
+after setup.
 
 ## Item syntax
 
@@ -19,7 +22,8 @@ yourself or it fell out of a capture, a wrap, or a meeting note.
 - `due:` is optional. Omit it if there is no real date.
 - `captured:` is always written. It drives the age sort in the weekly review, so
   an item that has been sitting for six weeks cannot hide.
-- Use `[[Name]]` inline for people, projects, and companies.
+- Use `[[Name]]` inline for people, projects, and companies. A company does not
+  need a file of its own. If one earns notes, it gets a file in `notes/`.
 - Check the box to complete: `- [x]`. Add a short outcome and the date it closed.
 
 An item with no priority and no due date is still valid. It just will not be

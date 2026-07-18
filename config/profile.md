@@ -1,8 +1,12 @@
 <!--
-Claude: this file holds who the user is. If any {{placeholder}} markers are
-still here, the user has not been set up. Run the setup interview in CLAUDE.md
-before doing anything else. Ask one question at a time and write each answer
-into this file as it arrives.
+Claude: this file holds who the user is. Each section below has one answer slot,
+written as a field name wrapped in double curly braces. If a slot is still
+sitting where an answer should be, the user has not been set up: stop and run
+the setup interview in CLAUDE.md before doing anything else. Ask one question at
+a time and write each answer into this file as it arrives, replacing the slot.
+If the user skips a question, write (skipped) and move on. Read the slots, do
+not pattern match the whole file: this comment describes the slot shape and
+would match itself.
 -->
 
 # Profile
@@ -17,14 +21,16 @@ What to call the user in briefings and reviews.
 
 {{timezone}}
 
-Every date and time written into this folder uses this. IANA name preferred,
-for example `Europe/Lisbon` or `America/Chicago`.
+Every date and time written into this folder uses this, not the clock on the
+machine Claude happens to be running on. IANA name required, for example
+`Europe/Lisbon` or `America/Chicago`.
 
 ## Life threads
 
 Three to six threads this life actually runs on. These become the sections in
 every weekly, monthly, and quarterly review, so keep them few and keep them
-real. Work, health, a relationship, a craft, a company you are building.
+real. Work, health, a marriage, a class you teach, a house you are rebuilding,
+a business you own.
 
 - {{thread-1}}
 - {{thread-2}}
@@ -32,6 +38,10 @@ real. Work, health, a relationship, a craft, a company you are building.
 - {{thread-4-optional}}
 - {{thread-5-optional}}
 - {{thread-6-optional}}
+
+Three of these are required and three are optional. Whichever the user does not
+name, delete the whole line. An unused slot left sitting here reads as an
+unanswered question and holds the setup gate shut.
 
 ## Tags
 

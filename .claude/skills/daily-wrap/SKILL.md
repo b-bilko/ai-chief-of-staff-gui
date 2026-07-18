@@ -25,12 +25,21 @@ Read `config/profile.md` for the name, timezone, and life threads. Read
 
 - **Non-negotiables** (question 4 of the season file). If the user named any, you
   will write a status line for each at the end. If the answer is blank or
-  `{{skipped}}`, skip that section entirely and never mention it.
+  `(skipped)`, skip that section entirely and never mention it.
 - **The custom evening question** (question 5). If there is one, you ask it last.
   If not, the interview is nine questions.
 
-Get today's date in the profile timezone. Get the weekday from `date +%A` through
-Bash. Never infer a weekday from a date string.
+Get the timezone out of `config/profile.md` and pass it to `date` through Bash,
+so the machine clock never decides what day it is. With `Europe/Lisbon` in the
+profile:
+
+```
+TZ=Europe/Lisbon date +%Y-%m-%d
+TZ=Europe/Lisbon date +%A
+```
+
+Substitute whatever zone the profile names. Bare `date +%A` is wrong. Never infer
+a weekday from a date string.
 
 Check whether a calendar connector is available. If one is, you will offer a pass
 over today's meetings after the interview. If not, the wrap runs exactly the same
@@ -70,6 +79,28 @@ Question 5 does most of the work in this system. Small decisions count: what the
 said no to, what they picked between, what they stopped doing. If the answer is a
 single decision, that is fine. If they say none, leave the section out.
 
+### The non-negotiables sweep
+
+Only when `config/season.md` names non-negotiables. This is the one question you
+are allowed to add, and you ask it after the last question, including the custom
+one.
+
+Read back through the answers they just gave. Some non-negotiables will already
+be settled, because "got out for a walk at lunch" answers the walk. Take those as
+answered and do not ask again. Then ask about whatever is left, all of it in a
+single question:
+
+> "Two quick ones before I write this up: did you get outside today, and were you
+> in bed by eleven?"
+
+One question, however many items are unresolved. Never one question per item, and
+never ask about something they already covered. If everything is covered, ask
+nothing at all and say nothing about it. If they wave it off, that is fine too,
+write those lines as "not asked" and move on.
+
+This is a checkbox sweep, not an opening. Take the yes or no, do not follow up,
+do not comment on the answer.
+
 ## After the interview
 
 ### 1. Today's meetings, when a calendar connector is present
@@ -88,24 +119,42 @@ With no calendar connector, skip this step silently.
 Read `tracker.md`. Surface at most five items total, grouped, one consolidated
 question per group. Never go item by item.
 
-Before you surface anything due today or overdue, cross check `meetings/` for a
-note dated today that covers the same person or project. If one exists, the
-meeting happened, so mark the prep or follow up item done without asking and
-mention it in your confirmation. Only ask about items with no such evidence.
+Never check a box the user did not tell you to check. A meeting note is evidence
+that a meeting happened, not evidence that their work around it is done, and a
+wrongly closed item disappears from every future briefing and review. So when a
+note in `meetings/` is dated today and the item's own text names preparation or
+follow up for that specific meeting, say so and ask anyway, as part of the
+group's one question:
+
+> "Prep for the roof estimate, and there is a note from it, so I assume that one
+> is done. Close it?"
+
+Take the yes, then close it. If the item merely shares a person or a project with
+today's meeting, that is not evidence of anything, so treat it like any other
+item and ask plainly.
 
 1. **Overdue** (`due:` before today, unchecked): "These slipped past their due
    date. Done, pushed, or dropped?"
 2. **Due in the next three days**: "Coming up: ..." Ask only if they want to move
    anything.
-3. **Stale**: two or three items with `captured:` more than fourteen days ago, no
+3. **High priority with no due date**: `!high`, unchecked, no `due:`. These are
+   the items that fall through, because nothing else in this list catches them
+   and the morning briefing keeps asking for them until someone closes them.
+   "Still open, still urgent?"
+4. **Stale**: two or three items with `captured:` more than fourteen days ago, no
    `due:`, not `!high`. "Still doing these?"
 
 Apply their answer to `tracker.md` directly: check the box with a short outcome
 and the date, edit the text if the scope changed, add or move `due:`, change
 priority, or delete what they drop.
 
-If there is nothing overdue, nothing due soon, and nothing stale, skip this step
-without comment.
+One more pass before you move on. If a win or a decision they described in the
+interview matches an open item, that item is done and they will not think to say
+so. Name it and ask: "Sounds like the permit call is done, close it?" This is
+where an undated to-do finally gets closed, so do not skip it.
+
+If nothing is overdue, due soon, high priority and undated, or stale, and nothing
+in the interview matched an open item, skip this step without comment.
 
 ### 3. Write into today's daily note
 
@@ -140,14 +189,18 @@ filling `{{date}}` and `{{weekday}}`. Fill the `## End of Day Reflection` sectio
 [answer]
 ```
 
-Then the decisions from question 5 go in their own section, directly below the
-reflection:
+Then the decisions from question 5 go in their own section. `## Decisions Made`
+is a top level section of the daily note and it sits directly after the
+`## End of Day Reflection` section, before `## Non-negotiables` if that one
+exists. Create it there if it is not there yet, and append to it if it is,
+because a capture earlier in the day may have opened it already. Never open a
+second one.
 
 ```markdown
 ## Decisions Made
 
-- Killed the second vendor evaluation. Two weeks in and we already knew.
-- Told [[Priya Raman]] the cutover moves to April, rather than pushing the team through a bad week.
+- Dropped the Saturday market stall. Two months in and it never covered the gas.
+- Told [[Dana Whitfield]] the roof work moves to April, rather than starting it in the rain.
 ```
 
 Keep that heading spelled exactly `## Decisions Made`. The weekly recap harvests
@@ -172,24 +225,29 @@ Append to today's daily note, below the decisions:
 
 ```markdown
 ## Non-negotiables
-- Walked outside: yes, morning walk before the standup
-- Asleep by 11: no, "was up until 1 chasing the deploy"
-- Hands on real work: not evident
+- Walked outside: yes, got the dog out before the first appointment
+- Asleep by 11: no, "up past one with the baby"
+- Dinner at the table: not asked
 ```
 
-Derive each line from answers they already gave. Do not add a question to the
-interview to fill a line, and do not guess. "Not evident" is a real answer and it
-is better than a wrong yes. Record, do not advise. Three nights of "not evident"
-is the weekly recap's business, not yours.
+Each line comes from something they said, either in the interview or in the
+sweep. Do not guess and do not infer a yes from silence. Use "not asked" when the
+sweep did not get to it or they waved it off, and it is better than a wrong yes.
+Record, do not advise. Three nights of "no" is the weekly recap's business, not
+yours.
 
 ### 5. Commit
 
+Stage the files you actually touched, by path. Never `git add -A`, because it
+sweeps up whatever else is sitting in the folder:
+
 ```
-git add -A && git commit -m "daily-wrap: 2026-03-14"
+git add daily/2026-03-14.md tracker.md
+git commit -m "daily-wrap: 2026-03-14"
 ```
 
-Then check for a remote. If one exists, push. If not, stop after the commit and
-say nothing about it.
+Then check for a remote. Push only to a remote the user owns. If there is none,
+stop after the commit and say nothing about it.
 
 ## Output
 
@@ -198,8 +256,7 @@ Three to five lines. Nothing else.
 ```
 Wrap saved -> daily/2026-03-14.md
 Decisions: 2 recorded
-Tracker: closed the cutover plan and the Priya follow up, pushed the vendor review to 2026-03-20
-Auto-closed: prep for the migration sync, meeting note exists
+Tracker: closed the roof measurements and the permit call, pushed the gutter quote to 2026-03-20
 ```
 
 Do not summarize the day back at them. Do not tell them it sounds like a good
@@ -211,9 +268,9 @@ rather than reopening the interview.
 
 ## Tone and format rules
 
-- Their words stay theirs. "The launch was a dumpster fire" does not become "the
-  launch had setbacks." A year from now the value of this file is that it still
-  sounds like them.
+- Their words stay theirs. "The whole day was a dumpster fire" does not become
+  "the day had its setbacks." A year from now the value of this file is that it
+  still sounds like them.
 - No coaching, no affirmations, no encouragement layer, during or after.
 - Skipped questions produce no section. A quiet day produces a short note.
 - Frontmatter stays at three fields: `type`, `date`, `tags`, tags as a quoted

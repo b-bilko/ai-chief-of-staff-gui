@@ -41,12 +41,22 @@ better filter than memory.
 ## Quickstart
 
 1. Install [Claude Code](https://claude.com/claude-code).
-2. Get the repo. On
+2. Get your own copy. On
    [github.com/derrekyoung/ai-chief-of-staff](https://github.com/derrekyoung/ai-chief-of-staff),
-   press **Use this template** for your own copy, or clone it:
+   press **Use this template** and set the new repository to **Private**. That
+   gives you a repo under your own account, which is the remote the skills expect
+   to push to.
+
+   If you would rather clone, drop the inherited remote in the same breath.
+   Otherwise `origin` points at a public repository you cannot push to, and every
+   skill that commits keeps trying to push your life record to it:
    ```
    git clone https://github.com/derrekyoung/ai-chief-of-staff.git
+   cd ai-chief-of-staff
+   git remote remove origin
    ```
+   Add your own private remote later with `git remote add origin <your-repo>`, or
+   add none at all and keep everything on this machine.
 3. Open the folder in Claude Code:
    ```
    cd ai-chief-of-staff
@@ -58,7 +68,7 @@ better filter than memory.
    every other skill reads. Ten minutes, once.
 5. Capture something. Just type it:
    ```
-   Talked to Priya about the migration. She wants a decision by Friday.
+   Talked to Priya about moving the Saturday hours. She wants a decision by Friday.
    ```
    No command needed. It lands in today's note, with the to-do in `tracker.md`.
 6. Tonight, run `/daily-wrap`. Tomorrow morning, run `/daily-briefing`. That loop
@@ -77,7 +87,8 @@ better filter than memory.
 | `/quarterly-recap` | Reads the three monthlies. The long arc, plus a proposed rewrite of `config/season.md` you accept, edit, or reject. |
 | `/annual-review` | Reads the four quarterlies. The year's arc, decisions of the year, what the patterns now say, and next year's opening season. Falls back to a guided interview if the quarterlies are not there. |
 
-Every skill writes markdown you can read without Claude, edit by hand, and grep.
+Every skill writes plain markdown you can read without Claude, edit by hand, and
+search with anything.
 
 ## How it stays honest
 
@@ -87,9 +98,13 @@ Most journaling tools flatter you. This one is built not to.
   better prose, because next month's review is only useful if it sounds like you.
 - No pep talks. When a week was bad, the recap says the week was bad and shows
   you the evidence. There is no encouragement layer.
-- Patterns have to earn it. A theme is only promoted to `patterns/` after three
-  or more signals across two or more days. Everything below that threshold sits in
-  a Watching list where you can ignore it.
+- Patterns have to earn it, and the bar is deliberately high. A theme reaches
+  `patterns/` only when three things hold at once: three or more signals across
+  three or more days, coming from at least two distinct subjects, with thirty days
+  of notes behind them. One worry raised on three consecutive days is a single
+  signal recorded three times, not a theme. Everything under the bar sits in a
+  Watching list you can ignore. Expect almost nothing to qualify in your first
+  month, which is the design working rather than failing.
 - Scores are real. Every recap ends with an honest score, and a 4 stays a 4. If
   three threads went untouched for a month, you read that in plain language.
 - Empty sections get skipped, not padded. A quiet week produces a short recap.
@@ -105,6 +120,10 @@ to write here.
 If you push this repo anywhere, **make it private**. This is a record of your
 life, your work, and the people around you. Committing it to a public remote is
 a mistake that is hard to take back. Git history keeps what you delete.
+
+Run `git remote -v` once before you capture anything. It should show a repository
+under your own account, or nothing at all. If it still shows the template you
+copied from, see step 2.
 
 ## Connect your tools
 
@@ -134,10 +153,11 @@ your calendar. If you want something sent, you write it and send it yourself.
 
 The pattern is the same for all of them: get the notes out of the tool, drop the
 file into `meetings/`, and let capture route it. Name the file
-`YYYY-MM-DD - Name.md`, for example
-`meetings/2026-03-14 - Migration sync with Priya.md`. Then tell Claude "process
-the meeting note I just dropped in" and it files the attendees, the decisions, and
-the action items where they belong.
+`YYYY-MM-DD - Descriptive name.md`: sentence case, real spaces, no punctuation
+beyond the separator, for example
+`meetings/2026-03-14 - Saturday hours with Priya.md`. Then tell Claude "process
+the meeting note I just dropped in" and it files the attendees, the decisions,
+and the action items where they belong.
 
 **Granola.** Notes and transcripts live in the Granola app, one card per meeting.
 The worked example is the

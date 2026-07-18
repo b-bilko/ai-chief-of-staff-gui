@@ -19,19 +19,28 @@ can also ask for a past quarter at any time.
 Confirm which quarter before reading anything. Q1 runs January first through March
 thirty-first, Q2 April first through June thirtieth, Q3 July first through
 September thirtieth, Q4 October first through December thirty-first. Compute the
-boundaries and the run weekday with `date` through Bash, never from an ISO string.
-Use the timezone in `config/profile.md` for every date you write. Title the review
-by quarter and year, for example "Q3 2027".
+boundaries and the run weekday through Bash, with the timezone from
+`config/profile.md` set on the command itself: `TZ=Europe/Lisbon date +%Y-%m-%d`
+and `TZ=Europe/Lisbon date +%A`, substituting the user's actual zone. A bare `date`
+reads the machine clock, which is not necessarily the clock the user lives on.
+Never read a weekday off an ISO string. Title the review by quarter and year, for
+example "Q3 2027".
 
 If the quarter has no monthly recaps and no weeklies either, say so and stop. A
 quarterly built on nothing is fiction.
+
+If `reviews/YYYY-QN-quarterly.md` already exists for the quarter you are about to
+write, stop and ask before replacing it. Say when it was written and what it was
+built from. A quarterly assembled from three monthlies should not be silently
+overwritten by a run working from two weeks of weeklies.
 
 ## Sources (read in this order)
 
 1. `reviews/YYYY-MM-monthly.md` for each of the quarter's three months. These are
    the spine of the whole review.
 2. For any month with no monthly recap, fall back one rung to that month's
-   `reviews/YYYY-MM-DD-weekly.md` files. Name the gap in the review itself, one
+   `reviews/YYYY-MM-DD-weekly.md` files, using the monthly skill's straddle rule to
+   decide which weeks count as that month's. Name the gap in the review itself, one
    line saying which month lacked a monthly and what you read instead. Do not
    paper over it, and do not drop to daily notes to fill it.
 3. `tracker.md` for what stalled across ninety days. An item that survived two or
@@ -39,10 +48,26 @@ quarterly built on nothing is fiction.
    once. The Completed archive shows what actually closed.
 4. `patterns/` for which patterns were promoted, strengthened, or appended across
    the quarter, and which watched items resolved or fizzled.
-5. `projects/` decision records, for the Decisions of the Quarter section only.
+5. `projects/` decision records, and only those, for the Decisions of the Quarter
+   section. This is the one read that reaches below your rung. See the note below
+   for why it is allowed and how narrow it is.
 6. `config/season.md` and `config/profile.md` for the lens and the thread list.
 
-**Never re-crawl `daily/`.** Three levels of reduction already happened below you.
+**Never re-crawl `daily/`.** Three rungs of reduction sit below you already, the
+evening wrap, the weekly, and the monthly, and re-reading raw days throws that
+work away.
+
+Two of the reads above are lateral, not downward. `tracker.md` and `patterns/` are
+running records that every rung reads directly, because neither is a summary of
+the rung below it. Reading them here is normal and is not an exception to
+anything.
+
+`projects/` is the real exception, so hold it to its scope: **decision records
+only, for Decisions of the Quarter.** A decision written straight into a project
+file can go three months without ever reaching a weekly or a monthly, and that is
+the specific hole this read closes. Do not read project status, history, or notes
+while you are in there.
+
 Do not re-run any sweep. Never invent content for a missing source. If a month was
 thin, say it was thin.
 
@@ -147,9 +172,26 @@ useful sentence in the section.
 
 Energy and mood across the quarter, plus any rhythm the notes actually track.
 Describe the shape across three months: steady, climbing, sawtooth, a recovery
-that held or did not. If `config/season.md` names non-negotiables, read the floor
-against them explicitly and say whether it held. Tie shape to cause only where the
-sources support the link.
+that held or did not. Tie shape to cause only where the sources support the link.
+
+If `config/season.md` question 4 names non-negotiables, read the floor against them
+explicitly and say whether it held across ninety days, using the monthly floor
+reads rather than recounting days yourself. If the season was rewritten mid-quarter
+and the non-negotiables changed with it, read each one against the stretch it
+actually covered. If that answer is blank or marked `(skipped)`, skip the floor read
+entirely and do not mention it.
+
+### The Evening Question
+
+**Only when `config/season.md` question 5 names one.** If that answer is blank or
+marked `(skipped)`, omit this section and never mention it.
+
+A quarter holds roughly ninety answers to the same nightly question, which is the
+longest run of one signal anywhere in this folder. Say what the answers show over
+that span: what held, what shifted and roughly when, and whether the question is
+still pulling anything useful. Two to four bullets. If the answers have gone thin
+or repetitive, say so plainly and note that Season Rewrite is where the question
+gets changed or dropped.
 
 ### Patterns: What Hardened, What Faded
 
@@ -195,6 +237,11 @@ user's own language wherever the sources give it to you. Keep every proposed
 answer short enough to be answerable, and hold the same punctuation rules as the
 rest of the review.
 
+The Evening Question section above is the evidence for the fifth answer. Keep the
+question if ninety nights of answers are still pulling something, swap it if the
+answers went flat, and leave it blank if it never earned its place. Do not propose
+a new nightly question with no read behind it.
+
 Then walk the user through it, one choice at a time:
 
 - Accept the draft as written.
@@ -205,9 +252,15 @@ Then walk the user through it, one choice at a time:
 
 **Write `config/season.md` only after the user says yes.** Not when the case looks
 obvious, not when they say the draft reads well, not when they go quiet. An
-explicit yes, then write the file and commit it separately with the message
-`season: updated after YYYY-QN`. If the season still fits, say so in a line and
-skip the draft entirely.
+explicit yes, then write the file and commit it on its own, separately from the
+review:
+
+```
+git add config/season.md
+git commit -m "season: updated after YYYY-QN"
+```
+
+If the season still fits, say so in a line and skip the draft entirely.
 
 ### Carry Into Next Quarter
 
@@ -250,14 +303,19 @@ the quarter.
 **Sources:** [[2027-07-monthly]], [[2027-08-monthly]], [[2027-09-06-weekly]],
 [[2027-09-13-weekly]], tracker.md
 ```
-4. Commit:
+4. Commit, staging the file by its own path:
 
 ```
-git add -A && git commit -m "quarterly-recap: YYYY-QN"
+git add reviews/YYYY-QN-quarterly.md
+git commit -m "quarterly-recap: YYYY-QN"
 ```
 
-Then check for a remote and push if one exists. If there is no remote, stop after
-the commit and say nothing about it.
+Never `git add -A`. Any season rewrite the user approved is a separate commit, as
+above, and unrelated work sitting in the tree is not yours to commit.
+
+Then check for a remote. Push only to a remote the user owns. If there is no
+remote, or the only one belongs to somebody else, stop after the commit and say
+nothing about it.
 
 5. Confirm with a short summary and the output path, and state where the season
    question landed: accepted, edited, or kept. Do not read the review back at the
