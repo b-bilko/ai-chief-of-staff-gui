@@ -8,6 +8,12 @@ the next morning hands them back to you. Each level up reads the level below it,
 so your weeks are built from your days and your year is built from your quarters.
 Everything is local markdown. No database, no web app, no lock-in.
 
+> **This fork adds a mobile app.** A voice-first iOS/Android client lives in
+> [`app/`](app/): it reads the wrap's questions aloud and transcribes your spoken
+> answers into your own private vault repo, so the daily loop works away from a
+> desk. It's self-hosted (your key, your repo, no server) and built from source.
+> See [`app/README.md`](app/README.md). The desktop workflow below is unchanged.
+
 ## The altitude ladder
 
 Every level reads only one level down. That constraint is the whole design: it
