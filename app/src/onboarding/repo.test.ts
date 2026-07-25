@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { assessVault, prepareExistingRepo, prepareNewRepo } from "./repo";
 import { RepoGateError } from "../vault/git";
 import { Vault } from "../vault/fs";
-import { makeNodeGitFs, type GitFs } from "../vault/gitfs";
+import { makeNodeGitFs, type GitFs } from "../vault/gitfs.node";
 import type { GitHubClient } from "./github";
 
 /** A GitHub client stub returning whatever repo metadata a test wants. */

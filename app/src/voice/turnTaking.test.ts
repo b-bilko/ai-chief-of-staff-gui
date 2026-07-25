@@ -233,3 +233,28 @@ describe("VoiceController.askUser", () => {
     await expect(second).rejects.toBeInstanceOf(VoiceCancelledError);
   });
 });
+
+describe("subscribe", () => {
+  it("delivers events to subscribers and stops after unsubscribe", async () => {
+    const h = harness();
+    const seen: string[] = [];
+    const unsubscribe = h.controller.subscribe((e) => {
+      if (e.type === "state") seen.push(e.state);
+    });
+
+    const answer = h.controller.askUser("Q");
+    await tick();
+    h.synth.finish();
+    await tick();
+    expect(seen).toContain("speaking");
+    expect(seen).toContain("listening");
+
+    unsubscribe();
+    h.recognizer.final("done");
+    await tick();
+    h.controller.confirm();
+    await answer;
+    // No "reviewing"/"done" arrived after unsubscribe.
+    expect(seen).not.toContain("reviewing");
+  });
+});

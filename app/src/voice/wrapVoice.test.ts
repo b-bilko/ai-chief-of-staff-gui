@@ -10,7 +10,7 @@ import type { VoiceEvent } from "./types";
 import { FakeRecognizer, FakeSynth, FakeTimer } from "../../test/support/fakeVoice";
 import { runDailyWrap } from "../agent/flows/wrap";
 import { Vault } from "../vault/fs";
-import { makeNodeGitFs } from "../vault/gitfs";
+import { makeNodeGitFs } from "../vault/gitfs.node";
 import type { AssistantTurn, CreateParams } from "../agent/types";
 import { reactiveModel, toolResultsIn, usage } from "../../test/support/fakeModel";
 

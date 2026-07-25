@@ -26,6 +26,7 @@ import {
   type SpeechRecognizer,
   type SpeechSynthesizer,
   type Timer,
+  type VoiceEvent,
   type VoiceEventSink,
   type VoiceState,
 } from "./types";
@@ -79,6 +80,8 @@ export class VoiceController {
   private readonly autoConfirmMs: number;
 
   private state: VoiceState = "idle";
+  /** Screen-side subscribers, added and removed as a screen mounts/unmounts. */
+  private readonly listeners = new Set<VoiceEventSink>();
 
   /** The turn in flight. Null between questions. */
   private turn: ActiveTurn | null = null;
@@ -97,9 +100,20 @@ export class VoiceController {
     return this.state;
   }
 
+  /** Subscribe a screen to voice events; returns an unsubscribe. */
+  subscribe(listener: VoiceEventSink): () => void {
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
+  }
+
+  private emit(event: VoiceEvent): void {
+    this.onEvent?.(event);
+    for (const listener of this.listeners) listener(event);
+  }
+
   private setState(state: VoiceState): void {
     this.state = state;
-    this.onEvent?.({ type: "state", state });
+    this.emit({ type: "state", state });
   }
 
   /**
@@ -116,7 +130,7 @@ export class VoiceController {
     try {
       // 1. Speak the question. `skipSpeaking` stops playback early.
       this.setState("speaking");
-      this.onEvent?.({ type: "question", text: question });
+      this.emit({ type: "question", text: question });
       await this.synth.speak(question);
       this.throwIfCancelled();
 
@@ -131,7 +145,7 @@ export class VoiceController {
       // 3. Review. Show the answer; auto-confirm if untouched, but any edit
       //    cancels that so the user always wins the race.
       this.setState("reviewing");
-      this.onEvent?.({ type: "transcript", text: turn.transcript, isFinal: true });
+      this.emit({ type: "transcript", text: turn.transcript, isFinal: true });
       turn.review = defer<string>();
       this.armAutoConfirm();
       const answer = await turn.review.promise;
@@ -163,7 +177,7 @@ export class VoiceController {
     if (!this.turn) return;
     this.turn.transcript = text;
     this.clearAutoConfirm();
-    this.onEvent?.({ type: "transcript", text, isFinal: true });
+    this.emit({ type: "transcript", text, isFinal: true });
   }
 
   /** Accept the answer, optionally replacing it with edited text. */
@@ -197,7 +211,7 @@ export class VoiceController {
         const turn = this.turn;
         if (!turn) return;
         turn.transcript = text;
-        this.onEvent?.({ type: "transcript", text, isFinal: false });
+        this.emit({ type: "transcript", text, isFinal: false });
         this.armSilence();
       },
       onFinal: (text) => {
@@ -215,7 +229,7 @@ export class VoiceController {
         this.turn?.listening?.resolve();
       },
       onError: (message) => {
-        this.onEvent?.({ type: "error", message });
+        this.emit({ type: "error", message });
         // An error should not strand the wrap. Fall through to review with
         // whatever was heard, so the user can type the answer instead.
         this.turn?.listening?.resolve();

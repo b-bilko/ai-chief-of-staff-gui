@@ -73,11 +73,14 @@ function argToUri(segments: (string | { uri: string })[]): string {
     .replace(/\/+/g, "/");
 }
 
+/** The real File/Directory take string URIs; the mock keeps the {uri} form too. */
+type Segment = string | { uri: string };
+
 /** Build an `ExpoFileSystem` implementation over an in-memory store. */
 export function makeMockExpo(store: MockExpoStore): ExpoFileSystem {
   class MockFile implements ExpoFile {
     readonly uri: string;
-    constructor(...segments: (string | { uri: string })[]) {
+    constructor(...segments: Segment[]) {
       this.uri = argToUri(segments);
     }
     get exists(): boolean {
@@ -114,7 +117,7 @@ export function makeMockExpo(store: MockExpoStore): ExpoFileSystem {
 
   class MockDirectory implements ExpoDirectory {
     readonly uri: string;
-    constructor(...segments: (string | { uri: string })[]) {
+    constructor(...segments: Segment[]) {
       this.uri = argToUri(segments);
     }
     get exists(): boolean {

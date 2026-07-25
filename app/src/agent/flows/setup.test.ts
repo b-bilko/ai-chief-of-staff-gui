@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { runSetup } from "./setup";
 import { buildSetupContext } from "./context";
 import { Vault } from "../../vault/fs";
-import { makeNodeGitFs, type GitFs } from "../../vault/gitfs";
+import { makeNodeGitFs, type GitFs } from "../../vault/gitfs.node";
 import { parseProfile, requiredAnswersPresent } from "../../vault/config";
 import type { AssistantTurn, CreateParams } from "../types";
 import { reactiveModel, usage } from "../../../test/support/fakeModel";

@@ -4,7 +4,7 @@ import { join } from "node:path";
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { FsError, type GitFs, makeExpoGitFs, makeNodeGitFs, splitVirtual } from "./gitfs";
+import { FsError, type GitFs, makeExpoGitFs, makeNodeGitFs, splitVirtual } from "./gitfs.node";
 import { MockExpoStore, makeMockExpo } from "../../test/support/mockExpoFs";
 
 /**

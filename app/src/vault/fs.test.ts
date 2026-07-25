@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { EditMatchError, PathEscapesVaultError, Vault } from "./fs";
-import { type GitFs, makeExpoGitFs, makeNodeGitFs } from "./gitfs";
+import { type GitFs, makeExpoGitFs, makeNodeGitFs } from "./gitfs.node";
 import { MockExpoStore, makeMockExpo } from "../../test/support/mockExpoFs";
 
 interface Backend {

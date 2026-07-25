@@ -54,7 +54,7 @@ export interface GitStats {
   isSymbolicLink(): boolean;
 }
 
-type ReadFileOptions = { encoding?: "utf8" | null } | "utf8" | null | undefined;
+export type ReadFileOptions = { encoding?: "utf8" | null } | "utf8" | null | undefined;
 
 /** The promise filesystem isomorphic-git consumes: pass this as `{ fs }`. */
 export interface GitFs {
@@ -101,7 +101,7 @@ function makeStats(kind: "file" | "dir", size: number, mtimeMs: number): GitStat
   };
 }
 
-function wantsUtf8(options: ReadFileOptions): boolean {
+export function wantsUtf8(options: ReadFileOptions): boolean {
   if (options === "utf8") return true;
   if (options && typeof options === "object") return options.encoding === "utf8";
   return false;
@@ -133,77 +133,10 @@ export function splitVirtual(path: string): string[] {
   return segments;
 }
 
-// ---------------------------------------------------------------------------
-// Node backend — used by the headless conformance suite and the CLI harness.
-// ---------------------------------------------------------------------------
-
-/**
- * A GitFs backed by `node:fs`, rooted at a real directory.
- *
- * This is not shipped to the device; it exists so the git operations and the
- * conformance suite run on Node without a simulator.
- */
-export async function makeNodeGitFs(realRoot: string): Promise<GitFs> {
-  const nodeFs = await import("node:fs/promises");
-  const nodePath = await import("node:path");
-
-  const resolve = (virtual: string): string =>
-    nodePath.join(realRoot, ...splitVirtual(virtual));
-
-  // node:fs already throws errno errors of the right shape, so the Node backend
-  // is close to a pass-through. It only reshapes stat into GitStats so both
-  // backends return an identical object.
-  const toStats = (s: import("node:fs").Stats): GitStats => ({
-    type: s.isDirectory() ? "dir" : "file",
-    mode: s.mode,
-    size: s.size,
-    ino: Number(s.ino),
-    mtimeMs: s.mtimeMs,
-    ctimeMs: s.ctimeMs,
-    uid: s.uid,
-    gid: s.gid,
-    dev: Number(s.dev),
-    isFile: () => s.isFile(),
-    isDirectory: () => s.isDirectory(),
-    isSymbolicLink: () => s.isSymbolicLink(),
-  });
-
-  return {
-    promises: {
-      async readFile(path, options) {
-        const data = await nodeFs.readFile(resolve(path));
-        return wantsUtf8(options) ? data.toString("utf8") : new Uint8Array(data);
-      },
-      async writeFile(path, data) {
-        await nodeFs.writeFile(resolve(path), data);
-      },
-      async unlink(path) {
-        await nodeFs.unlink(resolve(path));
-      },
-      async readdir(path) {
-        return nodeFs.readdir(resolve(path));
-      },
-      async mkdir(path) {
-        await nodeFs.mkdir(resolve(path));
-      },
-      async rmdir(path) {
-        await nodeFs.rmdir(resolve(path));
-      },
-      async stat(path) {
-        return toStats(await nodeFs.stat(resolve(path)));
-      },
-      async lstat(path) {
-        return toStats(await nodeFs.lstat(resolve(path)));
-      },
-      async readlink(path) {
-        return nodeFs.readlink(resolve(path));
-      },
-      async symlink(target, path) {
-        await nodeFs.symlink(target, resolve(path));
-      },
-    },
-  };
-}
+// The Node backend (`makeNodeGitFs`) lives in `gitfs.node.ts`, imported only by
+// the headless test suite. Keeping it out of this module is what stops Metro
+// from trying to bundle `node:fs` for the device — this file reaches the device
+// bundle through `makeExpoGitFs`, so it must not name a Node builtin.
 
 // ---------------------------------------------------------------------------
 // Expo backend — the real device filesystem.
@@ -217,8 +150,11 @@ export async function makeNodeGitFs(realRoot: string): Promise<GitFs> {
  * the real `File`, `Directory`, and `Paths` in.
  */
 export interface ExpoFileSystem {
-  File: new (...segments: (string | { uri: string })[]) => ExpoFile;
-  Directory: new (...segments: (string | { uri: string })[]) => ExpoDirectory;
+  // The real File/Directory accept a variadic mix of strings and Directory/File
+  // instances and join them; this backend only ever passes a single absolute
+  // `file://` URI string, which is the common denominator.
+  File: new (...segments: string[]) => ExpoFile;
+  Directory: new (...segments: string[]) => ExpoDirectory;
   Paths: { join(...segments: string[]): string; basename(path: string): string };
 }
 
@@ -256,12 +192,12 @@ export function makeExpoGitFs(expo: ExpoFileSystem, baseUri: string): GitFs {
   const { File, Directory, Paths } = expo;
 
   const uriFor = (virtual: string): string => Paths.join(baseUri, ...splitVirtual(virtual));
-  const fileAt = (virtual: string): ExpoFile => new File({ uri: uriFor(virtual) });
-  const dirAt = (virtual: string): ExpoDirectory => new Directory({ uri: uriFor(virtual) });
+  const fileAt = (virtual: string): ExpoFile => new File(uriFor(virtual));
+  const dirAt = (virtual: string): ExpoDirectory => new Directory(uriFor(virtual));
   const parentDir = (virtual: string): ExpoDirectory => {
     const segments = splitVirtual(virtual);
     segments.pop();
-    return new Directory({ uri: Paths.join(baseUri, ...segments) });
+    return new Directory(Paths.join(baseUri, ...segments));
   };
 
   return {

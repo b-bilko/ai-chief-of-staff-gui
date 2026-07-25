@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { runDailyWrap } from "./wrap";
 import { VaultNotConfiguredError } from "./context";
 import { Vault } from "../../vault/fs";
-import { makeNodeGitFs, type GitFs } from "../../vault/gitfs";
+import { makeNodeGitFs, type GitFs } from "../../vault/gitfs.node";
 import type { AssistantTurn, CreateParams } from "../types";
 import { reactiveModel, toolResultsIn, usage } from "../../../test/support/fakeModel";
 

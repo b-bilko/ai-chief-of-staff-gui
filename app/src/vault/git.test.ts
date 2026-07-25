@@ -14,7 +14,7 @@ import {
   looksLikeVault,
   scanForSecrets,
 } from "./git";
-import { type GitFs, makeExpoGitFs, makeNodeGitFs } from "./gitfs";
+import { type GitFs, makeExpoGitFs, makeNodeGitFs } from "./gitfs.node";
 import { MockExpoStore, makeMockExpo } from "../../test/support/mockExpoFs";
 
 const AUTHOR = { name: "Bart", email: "bart@example.com" };
