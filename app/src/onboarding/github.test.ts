@@ -40,6 +40,28 @@ describe("device flow", () => {
     expect(code.interval).toBe(5);
   });
 
+  it("fails clearly when the device-code request is rejected (bad/placeholder client id)", async () => {
+    const fetch = router([
+      {
+        match: "device/code",
+        // GitHub answers a bad client id with an error body and no code fields.
+        responses: [ok({ error: "unauthorized_client", error_description: "The client_id is not valid." })],
+      },
+    ]);
+    const client = createGitHubClient({ clientId: "REPLACE_WITH_OAUTH_APP_CLIENT_ID", fetch, sleep: noSleep });
+    const err = await client.startDeviceFlow().catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(GitHubAuthError);
+    expect((err as GitHubAuthError).message).toContain("EXPO_PUBLIC_GITHUB_CLIENT_ID");
+    // Never hand back an all-undefined code that the UI would render blank.
+    expect((err as Error).message).not.toContain("undefined");
+  });
+
+  it("fails clearly on a non-200 device-code response", async () => {
+    const fetch = router([{ match: "device/code", responses: [new Response("nope", { status: 404 })] }]);
+    const client = createGitHubClient({ clientId: "cli", fetch, sleep: noSleep });
+    await expect(client.startDeviceFlow()).rejects.toBeInstanceOf(GitHubAuthError);
+  });
+
   it("polls through pending and slow_down, then returns the token", async () => {
     const fetch = router([
       {
