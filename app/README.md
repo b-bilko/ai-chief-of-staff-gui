@@ -123,6 +123,8 @@ src/ui/       the screens and the shell
   is shown for you to fix before it's written, because a wrong transcript
   committed becomes a permanent, wrong quote. Keeping the audio on your phone is
   the trade, and it's the reason this is a private app and not a web service.
+  On Android this relies on Google's on-device speech service (present on most
+  phones); a de-Googled ROM without it won't transcribe.
 - **This is not on the App Store.** You build it and run it yourself. Sharing it
   is welcome; the BYO-key, self-build model is deliberate.
 - **You pay Anthropic directly.** The app shows the running cost so there are no
