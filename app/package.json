@@ -25,7 +25,8 @@
     "expo-system-ui": "~57.0.1",
     "isomorphic-git": "^1.40.0",
     "react": "19.2.3",
-    "react-native": "0.86.0"
+    "react-native": "0.86.0",
+    "react-native-safe-area-context": "~5.7.0"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

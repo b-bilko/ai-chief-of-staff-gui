@@ -13,6 +13,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 
 import { GITHUB_CLIENT_ID } from "./src/core/config";
@@ -54,6 +55,15 @@ type Route =
   | "settings";
 
 export default function App() {
+  // SafeAreaView (in components.tsx) needs this provider above it.
+  return (
+    <SafeAreaProvider>
+      <Root />
+    </SafeAreaProvider>
+  );
+}
+
+function Root() {
   const secrets = useMemo(() => createExpoSecretStore(), []);
   const github = useMemo(() => createGitHubClient({ clientId: GITHUB_CLIENT_ID }), []);
 
