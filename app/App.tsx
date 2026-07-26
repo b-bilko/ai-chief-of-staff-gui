@@ -15,6 +15,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { SafeAreaProvider, initialWindowMetrics } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
+import Constants from "expo-constants";
 
 import { GITHUB_CLIENT_ID } from "./src/core/config";
 import { createServices, type Services, type VaultBinding } from "./src/core/services";
@@ -187,6 +188,7 @@ function Root() {
             lastCommit: null,
             syncStatus: "up to date",
             costThisMonthUsd: 0,
+            appVersion: String(Constants.expoConfig?.extra?.appVersion ?? "dev"),
           }}
           onBack={() => setRoute("home")}
         />,

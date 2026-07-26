@@ -16,6 +16,7 @@ export interface SettingsInfo {
   lastCommit: string | null;
   syncStatus: string;
   costThisMonthUsd: number;
+  appVersion: string;
 }
 
 export interface SettingsScreenProps {
@@ -37,6 +38,7 @@ export function SettingsScreen({ info, onBack }: SettingsScreenProps) {
         <Row label="Last saved" value={info.lastCommit ?? "nothing yet"} />
         <Row label="Sync" value={info.syncStatus} />
         <Row label="Cost this month" value={`$${info.costThisMonthUsd.toFixed(2)}`} />
+        <Row label="App version" value={info.appVersion} />
 
         <View style={styles.note}>
           <Text style={type.dim}>

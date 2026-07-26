@@ -98,6 +98,28 @@ tapping through a simulator. See [`AGENTS.md`](AGENTS.md) for the contract with
 the vault (the timezone rule, verbatim answers, exact-path commits) that the code
 has to honour.
 
+## Versioning
+
+Every build carries a version, so you can tell which one is on a phone without
+guessing at tags. It's the [version-stamp](https://github.com/b-bilko/version-stamp)
+kit (MIT), vendored into [`tools/version-stamp/`](tools/version-stamp/):
+
+- The base version lives in [`VERSION`](VERSION) (a plain `X.Y.Z` line).
+- [`app.config.ts`](app.config.ts) stamps it into every build: `expo.version`
+  gets the base, `android.versionCode` / `ios.buildNumber` get the CI build
+  number (so store builds are always distinct and increasing), and the full
+  string (`X.Y.Z` locally, `X.Y.Z+build.<n>` in CI) lands in `extra.appVersion`.
+- **Settings** shows that string, so the running build is observable in-app.
+
+Cut a release by bumping the base version. Locally:
+
+```bash
+node tools/version-stamp/bump-version.mjs minor   # writes VERSION + package.json
+```
+
+Or run the **Release app** GitHub Action (*Actions → Release app → Run
+workflow*), which bumps, commits, tags `app-vX.Y.Z`, and cuts a GitHub Release.
+
 ## How it's built
 
 The Claude Agent SDK can't run inside React Native, so the app talks to the
