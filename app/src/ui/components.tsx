@@ -4,7 +4,7 @@
 
 import type { ReactNode } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import { colors, radius, space, type } from "./theme";
 import type { Phase } from "../core/flowState";

@@ -1,0 +1,62 @@
+# Cut an app release: bump the base version, commit it, push a vX.Y.Z tag, and
+# open a GitHub Release. Manual — you choose when and how big.
+#
+# Adapted from b-bilko/version-stamp's templates/release.yml for this repo's
+# layout: the app (and its VERSION file + vendored kit) lives under `app/`, not
+# at the repo root, so the bump runs there. Every build already stamps itself
+# from `app/VERSION` via `app/app.config.ts`; this is how you move that base.
+name: Release app
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: Which part of the version to bump
+        type: choice
+        options: [patch, minor, major]
+        default: patch
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-app
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Configure git identity
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Bump base version
+        id: bump
+        run: echo "version=$(node tools/version-stamp/bump-version.mjs ${{ inputs.bump }})" >> "$GITHUB_OUTPUT"
+
+      - name: Commit, tag and push
+        env:
+          VERSION: ${{ steps.bump.outputs.version }}
+        run: |
+          git add VERSION
+          [ -f package.json ] && git add package.json
+          git commit -m "Release app v${VERSION}"
+          git tag -a "app-v${VERSION}" -m "Release app v${VERSION}"
+          git push origin HEAD:main
+          git push origin "app-v${VERSION}"
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.bump.outputs.version }}
+        run: gh release create "app-v${VERSION}" --title "app v${VERSION}" --generate-notes

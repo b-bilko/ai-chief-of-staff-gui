@@ -2,10 +2,10 @@
   "expo": {
     "name": "Chief of Staff",
     "slug": "ai-chief-of-staff-gui",
-    "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#12100E",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.example.aichiefofstaff"
@@ -18,13 +18,26 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.example.aichiefofstaff"
+      "package": "com.example.aichiefofstaff",
+      "backgroundColor": "#12100E",
+      "blockedPermissions": [
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-speech-recognition",
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "Chief of Staff listens to your spoken answers during the wrap. Audio is transcribed on this device and never leaves it.",
+          "speechRecognitionPermission": "Chief of Staff transcribes your spoken answers on-device so the wrap can be done by voice.",
+          "androidSpeechServicePackages": ["com.google.android.googlequicksearchbox"]
+        }
+      ],
       "expo-secure-store"
     ]
   }

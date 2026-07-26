@@ -13,7 +13,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
+import { SafeAreaProvider, initialWindowMetrics } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
+import Constants from "expo-constants";
 
 import { GITHUB_CLIENT_ID } from "./src/core/config";
 import { createServices, type Services, type VaultBinding } from "./src/core/services";
@@ -54,6 +56,18 @@ type Route =
   | "settings";
 
 export default function App() {
+  // SafeAreaView (in components.tsx) needs this provider above it.
+  // initialMetrics gives synchronous first-frame insets, so the screen renders
+  // immediately instead of staying blank until the async native measurement
+  // arrives (which can otherwise leave a dark, empty frame on some devices).
+  return (
+    <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+      <Root />
+    </SafeAreaProvider>
+  );
+}
+
+function Root() {
   const secrets = useMemo(() => createExpoSecretStore(), []);
   const github = useMemo(() => createGitHubClient({ clientId: GITHUB_CLIENT_ID }), []);
 
@@ -174,6 +188,7 @@ export default function App() {
             lastCommit: null,
             syncStatus: "up to date",
             costThisMonthUsd: 0,
+            appVersion: String(Constants.expoConfig?.extra?.appVersion ?? "dev"),
           }}
           onBack={() => setRoute("home")}
         />,
