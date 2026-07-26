@@ -28,7 +28,8 @@ keystore (iOS Keychain, Android Keystore) and are never written into the vault.
 
 - **Node 20+** and npm.
 - To run on **iOS**: a Mac with **Xcode** installed.
-- To run on **Android**: **Android Studio** with an emulator or a connected device.
+- To run on **Android**: a JDK, the Android SDK, and an emulator or a connected
+  device — see the step-by-step [Android dev setup guide](docs/android-dev-setup.md).
 - No Xcode/Android Studio? Use an [**EAS build**](#build-without-a-mac) instead.
 
 ## Setup
