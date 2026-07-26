@@ -27,23 +27,25 @@ is the recommended route, especially for the emulator.
 
 ## 1. Install JDK 17
 
-Expo recommends the Azul Zulu build. With [Homebrew](https://brew.sh):
+With [Homebrew](https://brew.sh), the `openjdk@17` **formula** installs into the
+Homebrew prefix without asking for your password (the `zulu@17` cask works too
+but installs a `.pkg` that needs `sudo`):
 
 ```bash
-brew install --cask zulu@17
+brew install openjdk@17
 ```
 
-Confirm it's found:
+It's "keg-only" (not linked onto `PATH`), so point `JAVA_HOME` at it — Gradle
+reads that. Add to `~/.zshrc`:
 
 ```bash
-java -version    # should print a 17.x version
+export JAVA_HOME="/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home"
 ```
 
-If `java -version` shows a different major version (you may have several JDKs),
-pin 17 for your shell — add this to `~/.zshrc`:
+Confirm:
 
 ```bash
-export JAVA_HOME="$(/usr/libexec/java_home -v 17)"
+"$JAVA_HOME/bin/java" -version    # should print a 17.x version
 ```
 
 > Linux: install `zulu17-jdk` (or `openjdk-17-jdk`) from your package manager.
@@ -159,17 +161,22 @@ the SDK from the terminal. After installing JDK 17 (step 1):
 
 ```bash
 brew install --cask android-commandlinetools
-export ANDROID_HOME="$HOME/Library/Android/sdk"
-export PATH="$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator"
+# the cask's SDK root (where sdkmanager installs everything):
+export ANDROID_HOME="/opt/homebrew/share/android-commandlinetools"
+export JAVA_HOME="/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home"
+export PATH="$PATH:$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$ANDROID_HOME/cmdline-tools/latest/bin"
 
-# install the components the app needs
-sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0" "emulator"
-sdkmanager --licenses     # accept all
+# install the components the app needs (yes | auto-accepts the licenses)
+yes | sdkmanager --sdk_root="$ANDROID_HOME" \
+  "platform-tools" "platforms;android-36" "build-tools;36.0.0" "emulator"
 
-# create and boot an emulator (arm64 image with Google APIs)
-sdkmanager "system-images;android-36;google_apis_playstore;arm64-v8a"
-avdmanager create avd -n cos -k "system-images;android-36;google_apis_playstore;arm64-v8a" -d pixel_7
+# an arm64 emulator image with Google APIs (base android-36 has no arm64 phone
+# image; 36.1 does). Google APIs/Play carries the on-device speech service.
+yes | sdkmanager --sdk_root="$ANDROID_HOME" "system-images;android-36.1;google_apis;arm64-v8a"
+echo "no" | avdmanager create avd -n cos -k "system-images;android-36.1;google_apis;arm64-v8a" -d pixel_7
 emulator -avd cos &
 ```
 
 Then build with `npx expo run:android` as in [step 5](#5-build-and-run-the-app).
+The `sdkmanager`/`avdmanager` binaries are symlinked onto `PATH` by the cask, so
+you can call them directly.
