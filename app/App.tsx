@@ -39,6 +39,7 @@ import { RepoScreen } from "./src/ui/screens/RepoScreen";
 import { createGitHubClient } from "./src/onboarding/github";
 import { createExpoSecretStore } from "./src/onboarding/expoSecretStore";
 import { SECRET_KEYS } from "./src/onboarding/secretStore";
+import { validateAnthropicKey } from "./src/onboarding/anthropic";
 import type { CloneSpec } from "./src/onboarding/repo";
 
 type Route =
@@ -136,6 +137,32 @@ function Root() {
     setRoute(readiness.kind === "ready" ? "home" : readiness.kind === "not-a-vault" ? "not-a-vault" : "setup");
   };
 
+  // --- config page: rotate a key without re-onboarding ---
+  // Persist the new secret, update state, and rebuild services in place so the
+  // change takes effect immediately (no Loading flash, no re-clone).
+
+  const onUpdateAnthropicKey = async (value: string) => {
+    await secrets.set(SECRET_KEYS.anthropicKey, value);
+    setKey(value);
+    if (token && binding) setServices(createServices({ anthropicKey: value, gitToken: token, binding, secrets }));
+  };
+
+  const onUpdateGitToken = async (value: string) => {
+    await secrets.set(SECRET_KEYS.gitToken, value);
+    setToken(value);
+    if (key && binding) setServices(createServices({ anthropicKey: key, gitToken: value, binding, secrets }));
+  };
+
+  const validateAnthropic = async (value: string) => {
+    const r = await validateAnthropicKey(value.trim());
+    return r.ok ? { ok: true } : { ok: false, detail: r.detail };
+  };
+
+  const validateGitToken = async (value: string) => {
+    const viewer = await github.getViewerLogin(value.trim()).catch(() => "");
+    return viewer ? { ok: true } : { ok: false, detail: "GitHub rejected this token." };
+  };
+
   // --- render ---
 
   if (route === "loading" || route === "cloning") return <Loading />;
@@ -190,6 +217,23 @@ function Root() {
             costThisMonthUsd: 0,
             appVersion: String(Constants.expoConfig?.extra?.appVersion ?? "dev"),
           }}
+          secretFields={[
+            {
+              label: "Anthropic API key",
+              currentValue: key,
+              placeholder: "sk-ant-…",
+              helpUrl: "https://console.anthropic.com/settings/keys",
+              validate: validateAnthropic,
+              onSave: onUpdateAnthropicKey,
+            },
+            {
+              label: "GitHub token",
+              currentValue: token,
+              placeholder: "ghp_… or a fine-grained token",
+              validate: validateGitToken,
+              onSave: onUpdateGitToken,
+            },
+          ]}
           onBack={() => setRoute("home")}
         />,
       );

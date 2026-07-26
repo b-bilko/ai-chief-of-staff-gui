@@ -21,6 +21,18 @@ export interface SecretStore {
   delete(key: SecretKey): Promise<void>;
 }
 
+/**
+ * Mask a secret for display: enough of it to recognise which key is set,
+ * never enough to leak it over someone's shoulder. The full value is only
+ * shown behind an explicit reveal.
+ */
+export function maskSecret(value: string): string {
+  const v = value.trim();
+  if (!v) return "";
+  if (v.length <= 8) return "•".repeat(v.length);
+  return `${v.slice(0, 6)}…${v.slice(-4)}`;
+}
+
 /** An in-memory store, for tests and for a run that opts out of persistence. */
 export class MemorySecretStore implements SecretStore {
   private readonly values = new Map<SecretKey, string>();
