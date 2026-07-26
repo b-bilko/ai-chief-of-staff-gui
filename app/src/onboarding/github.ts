@@ -78,18 +78,32 @@ export function createGitHubClient(options: GitHubClientOptions) {
         body: JSON.stringify({ client_id: options.clientId, scope: SCOPE }),
       });
       const body = await json<{
-        device_code: string;
-        user_code: string;
-        verification_uri: string;
-        interval: number;
-        expires_in: number;
-      }>(response);
+        device_code?: string;
+        user_code?: string;
+        verification_uri?: string;
+        interval?: number;
+        expires_in?: number;
+        error?: string;
+        error_description?: string;
+      }>(response).catch(() => ({}) as Record<string, never>);
+
+      // A rejected request (most often a missing or wrong client id) comes back
+      // with an `error` and no code fields. Fail loudly here: without this
+      // guard the undefined fields flow into the UI as an empty code box and a
+      // cryptic "Invalid URL: ... Was: undefined" when we try to open GitHub.
+      if (!response.ok || body.error || !body.device_code || !body.user_code || !body.verification_uri) {
+        const detail = body.error_description || body.error || (response.ok ? "no device code was returned" : `HTTP ${response.status}`);
+        throw new GitHubAuthError(
+          body.error ?? "device_flow_failed",
+          `Couldn't start GitHub sign-in: ${detail}. Check that EXPO_PUBLIC_GITHUB_CLIENT_ID is set to your GitHub OAuth app's client id (with Device Flow enabled).`,
+        );
+      }
       return {
         deviceCode: body.device_code,
         userCode: body.user_code,
         verificationUri: body.verification_uri,
-        interval: body.interval,
-        expiresIn: body.expires_in,
+        interval: body.interval ?? 5,
+        expiresIn: body.expires_in ?? 900,
       };
     },
 
