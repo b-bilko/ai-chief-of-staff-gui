@@ -13,7 +13,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
-import { SafeAreaProvider } from "react-native-safe-area-context";
+import { SafeAreaProvider, initialWindowMetrics } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 
 import { GITHUB_CLIENT_ID } from "./src/core/config";
@@ -56,8 +56,11 @@ type Route =
 
 export default function App() {
   // SafeAreaView (in components.tsx) needs this provider above it.
+  // initialMetrics gives synchronous first-frame insets, so the screen renders
+  // immediately instead of staying blank until the async native measurement
+  // arrives (which can otherwise leave a dark, empty frame on some devices).
   return (
-    <SafeAreaProvider>
+    <SafeAreaProvider initialMetrics={initialWindowMetrics}>
       <Root />
     </SafeAreaProvider>
   );
