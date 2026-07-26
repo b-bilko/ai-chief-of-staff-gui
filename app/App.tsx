@@ -33,17 +33,17 @@ import { InterviewScreen } from "./src/ui/screens/InterviewScreen";
 import { BriefingScreen } from "./src/ui/screens/BriefingScreen";
 import { CaptureScreen } from "./src/ui/screens/CaptureScreen";
 import { SettingsScreen } from "./src/ui/screens/SettingsScreen";
-import { KeyScreen } from "./src/ui/screens/KeyScreen";
 import { GitAuthScreen } from "./src/ui/screens/GitAuthScreen";
 import { RepoScreen } from "./src/ui/screens/RepoScreen";
 import { createGitHubClient } from "./src/onboarding/github";
 import { createExpoSecretStore } from "./src/onboarding/expoSecretStore";
 import { SECRET_KEYS } from "./src/onboarding/secretStore";
+import { validateAnthropicKey } from "./src/onboarding/anthropic";
 import type { CloneSpec } from "./src/onboarding/repo";
 
 type Route =
   | "loading"
-  | "key"
+  | "config"
   | "git"
   | "repo"
   | "cloning"
@@ -89,8 +89,9 @@ function Root() {
       setToken(storedToken);
       setBinding(storedBinding);
 
-      if (!storedKey) return setRoute("key");
-      if (!storedToken) return setRoute("git");
+      // Config comes first: the keys are set on one page (paste or device
+      // flow) before the guided repo step begins.
+      if (!storedKey || !storedToken) return setRoute("config");
       if (!storedBinding) return setRoute("repo");
 
       const readiness = await assessClonedVault();
@@ -113,17 +114,13 @@ function Root() {
 
   // --- onboarding step handlers ---
 
-  const onKey = async (k: string) => {
-    await secrets.set(SECRET_KEYS.anthropicKey, k);
-    setKey(k);
-    setRoute("git");
-  };
-
+  // The GitHub device flow: on success, return to the config page so both keys
+  // are visibly set before the user continues to the repo step.
   const onToken = async (t: string) => {
     await secrets.set(SECRET_KEYS.gitToken, t);
     setToken(t);
     setLogin(await github.getViewerLogin(t).catch(() => ""));
-    setRoute("repo");
+    setRoute("config");
   };
 
   const onRepoChosen = async (spec: CloneSpec) => {
@@ -136,10 +133,64 @@ function Root() {
     setRoute(readiness.kind === "ready" ? "home" : readiness.kind === "not-a-vault" ? "not-a-vault" : "setup");
   };
 
+  // --- config page: rotate a key without re-onboarding ---
+  // Persist the new secret, update state, and rebuild services in place so the
+  // change takes effect immediately (no Loading flash, no re-clone).
+
+  const onUpdateAnthropicKey = async (value: string) => {
+    await secrets.set(SECRET_KEYS.anthropicKey, value);
+    setKey(value);
+    if (token && binding) setServices(createServices({ anthropicKey: value, gitToken: token, binding, secrets }));
+  };
+
+  const onUpdateGitToken = async (value: string) => {
+    await secrets.set(SECRET_KEYS.gitToken, value);
+    setToken(value);
+    // Resolve the login now: the clone step uses it for the git author line.
+    setLogin(await github.getViewerLogin(value.trim()).catch(() => ""));
+    if (key && binding) setServices(createServices({ anthropicKey: key, gitToken: value, binding, secrets }));
+  };
+
+  const validateAnthropic = async (value: string) => {
+    const r = await validateAnthropicKey(value.trim());
+    return r.ok ? { ok: true } : { ok: false, detail: r.detail };
+  };
+
+  const validateGitToken = async (value: string) => {
+    const viewer = await github.getViewerLogin(value.trim()).catch(() => "");
+    return viewer ? { ok: true } : { ok: false, detail: "GitHub rejected this token." };
+  };
+
   // --- render ---
 
   if (route === "loading" || route === "cloning") return <Loading />;
-  if (route === "key") return withBar(<KeyScreen onValidated={(k) => void onKey(k)} />);
+  if (route === "config") {
+    return withBar(
+      <SettingsScreen
+        title="Set up"
+        intro="Add your keys to get started. You can change these any time in Settings."
+        secretFields={[
+          {
+            label: "Anthropic API key",
+            currentValue: key,
+            placeholder: "sk-ant-…",
+            helpUrl: "https://console.anthropic.com/settings/keys",
+            validate: validateAnthropic,
+            onSave: onUpdateAnthropicKey,
+          },
+          {
+            label: "GitHub token",
+            currentValue: token,
+            placeholder: "ghp_… or a fine-grained token",
+            connect: { label: "Connect with GitHub instead", onPress: () => setRoute("git") },
+            validate: validateGitToken,
+            onSave: onUpdateGitToken,
+          },
+        ]}
+        primary={{ label: "Continue", onPress: () => setRoute("repo"), disabled: !(key && token) }}
+      />,
+    );
+  }
   if (route === "git") return withBar(<GitAuthScreen client={github} onToken={(t) => void onToken(t)} />);
   if (route === "repo") {
     return withBar(<RepoScreen client={github} token={token ?? ""} login={login} onChosen={(s) => void onRepoChosen(s)} />);
@@ -190,7 +241,24 @@ function Root() {
             costThisMonthUsd: 0,
             appVersion: String(Constants.expoConfig?.extra?.appVersion ?? "dev"),
           }}
-          onBack={() => setRoute("home")}
+          secretFields={[
+            {
+              label: "Anthropic API key",
+              currentValue: key,
+              placeholder: "sk-ant-…",
+              helpUrl: "https://console.anthropic.com/settings/keys",
+              validate: validateAnthropic,
+              onSave: onUpdateAnthropicKey,
+            },
+            {
+              label: "GitHub token",
+              currentValue: token,
+              placeholder: "ghp_… or a fine-grained token",
+              validate: validateGitToken,
+              onSave: onUpdateGitToken,
+            },
+          ]}
+          primary={{ label: "Back", tone: "ghost", onPress: () => setRoute("home") }}
         />,
       );
     default:
