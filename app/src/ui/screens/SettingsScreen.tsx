@@ -1,12 +1,16 @@
 /**
- * Settings, which is both the config page and the place to keep the user honest
- * about where their data lives.
+ * The config page, used in two places:
  *
- * The read-only rows (repo, visibility, sync, cost, version) keep the facts in
- * front of someone whose life record is in the vault. Below them, the keys the
- * app runs on can be rotated or corrected without re-running onboarding: each is
- * masked, revealable, validated before it is saved, and persisted to the device
- * keystore.
+ *  - **Before onboarding**, as the first screen: the user sets their Anthropic
+ *    key and GitHub token here (by paste, or the GitHub device flow) before the
+ *    guided repo step begins. No vault is bound yet, so the vault rows are
+ *    hidden and the primary action is "Continue".
+ *  - **After onboarding**, reached from Home: the same fields let a key be
+ *    rotated or corrected without re-running setup, above read-only rows that
+ *    keep the vault's private/public state and running cost in view.
+ *
+ * Each secret is masked, revealable, validated before it is saved, and persisted
+ * to the device keystore — never into the vault.
  */
 
 import { useState } from "react";
@@ -25,7 +29,7 @@ export interface SettingsInfo {
   appVersion: string;
 }
 
-/** One editable secret the config page can rotate. */
+/** One editable secret the config page can set or rotate. */
 export interface SecretFieldSpec {
   label: string;
   /** The current stored value, masked for display; null when nothing is set. */
@@ -33,6 +37,8 @@ export interface SecretFieldSpec {
   placeholder: string;
   /** A "get one here" link, optional. */
   helpUrl?: string;
+  /** An alternative to pasting, e.g. the GitHub device flow. */
+  connect?: { label: string; onPress: () => void };
   /** Check a candidate value before it is saved. */
   validate: (value: string) => Promise<{ ok: boolean; detail?: string }>;
   /** Persist the validated value. */
@@ -40,28 +46,37 @@ export interface SecretFieldSpec {
 }
 
 export interface SettingsScreenProps {
-  info: SettingsInfo;
+  title?: string;
+  intro?: string;
+  /** The vault rows; omitted before a vault is bound. */
+  info?: SettingsInfo;
   secretFields: SecretFieldSpec[];
-  onBack: () => void;
+  /** The bottom action: "Continue" during setup, "Back" from Home. */
+  primary: { label: string; onPress: () => void; disabled?: boolean; tone?: "primary" | "ghost" };
 }
 
-export function SettingsScreen({ info, secretFields, onBack }: SettingsScreenProps) {
+export function SettingsScreen({ title = "Settings", intro, info, secretFields, primary }: SettingsScreenProps) {
   return (
     <Screen>
-      <Text style={type.title}>Settings</Text>
+      <Text style={type.title}>{title}</Text>
+      {intro ? <Text style={type.dim}>{intro}</Text> : null}
       <ScrollView contentContainerStyle={{ gap: space.md, paddingBottom: space.xl }}>
-        <Row label="Vault repository" value={info.repoFullName} />
-        <Row
-          label="Visibility"
-          value={info.isPrivate ? "Private" : "PUBLIC — this should not happen"}
-          warn={!info.isPrivate}
-        />
-        <Row label="Last saved" value={info.lastCommit ?? "nothing yet"} />
-        <Row label="Sync" value={info.syncStatus} />
-        <Row label="Cost this month" value={`$${info.costThisMonthUsd.toFixed(2)}`} />
-        <Row label="App version" value={info.appVersion} />
+        {info ? (
+          <>
+            <Row label="Vault repository" value={info.repoFullName} />
+            <Row
+              label="Visibility"
+              value={info.isPrivate ? "Private" : "PUBLIC — this should not happen"}
+              warn={!info.isPrivate}
+            />
+            <Row label="Last saved" value={info.lastCommit ?? "nothing yet"} />
+            <Row label="Sync" value={info.syncStatus} />
+            <Row label="Cost this month" value={`$${info.costThisMonthUsd.toFixed(2)}`} />
+            <Row label="App version" value={info.appVersion} />
+          </>
+        ) : null}
 
-        <Text style={[type.dim, { marginTop: space.md }]}>KEYS &amp; CONNECTIONS</Text>
+        <Text style={[type.dim, { marginTop: info ? space.md : 0 }]}>KEYS &amp; CONNECTIONS</Text>
         {secretFields.map((field) => (
           <SecretRow key={field.label} field={field} />
         ))}
@@ -74,7 +89,7 @@ export function SettingsScreen({ info, secretFields, onBack }: SettingsScreenPro
           </Text>
         </View>
       </ScrollView>
-      <Button label="Back" tone="ghost" onPress={onBack} />
+      <Button label={primary.label} tone={primary.tone ?? "primary"} onPress={primary.onPress} disabled={primary.disabled ?? false} />
       <View style={{ height: space.lg }} />
     </Screen>
   );
@@ -137,10 +152,17 @@ function SecretRow({ field }: { field: SecretFieldSpec }) {
       </View>
 
       {!editing ? (
-        <Text style={[type.body, !field.currentValue && { color: colors.textDim }]}>
-          {masked || "Not set"}
-          {state.kind === "saved" ? "  ✓ updated" : ""}
-        </Text>
+        <>
+          <Text style={[type.body, !field.currentValue && { color: colors.textDim }]}>
+            {masked || "Not set"}
+            {state.kind === "saved" ? "  ✓ updated" : ""}
+          </Text>
+          {field.connect ? (
+            <View style={{ marginTop: space.sm }}>
+              <Button label={field.connect.label} tone="ghost" onPress={field.connect.onPress} />
+            </View>
+          ) : null}
+        </>
       ) : (
         <View style={{ gap: space.sm }}>
           <TextInput
